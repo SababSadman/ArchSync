@@ -1,0 +1,10 @@
+function App() {
+  return (
+    <div style={{ padding: '50px', background: '#ccc', height: '100vh' }}>
+      <h1 font-weight="bold">If you see this, the core setup is working!</h1>
+      <p>Debugging blank screen...</p>
+    </div>
+  );
+}
+
+export default App;
