@@ -4,8 +4,14 @@ import {
   FolderOpen, 
   CheckSquare, 
   Bell, 
-  Settings 
+  Settings,
+  PlusCircle,
+  LogOut
 } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useProjects } from '../../hooks/use-projects';
+import { useAuth } from '../../hooks/use-auth';
+import { useProjectModal } from '../../store/use-project-modal';
 
 const mainNav = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -14,16 +20,20 @@ const mainNav = [
   { name: 'Notifications', href: '/notifications', icon: Bell, badge: 3 },
 ];
 
-const recentProjects = [
-  { name: 'Meridian Tower', color: '#7C3AED' },
-  { name: 'Lakeside Villa', color: '#1F6FEB' },
-  { name: 'Downtown Hub', color: '#D97706' },
-  { name: 'Eco Residency', color: '#16A34A' },
-  { name: 'Nexus Plaza', color: '#7C3AED' },
-];
+const statusColors: Record<string, string> = {
+  draft: '#94a3b8',
+  active: '#10b981',
+  on_hold: '#f59e0b',
+  completed: '#3b82f6',
+};
 
 export function Sidebar() {
   const location = useLocation();
+  const { user } = useAuth();
+  const { openModal } = useProjectModal();
+  const { data: projects, isLoading } = useProjects();
+  
+  const sidebarProjects = projects?.slice(0, 5) || [];
 
   return (
     <div className="hidden md:flex flex-col w-[232px] h-full bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] shrink-0">
@@ -72,42 +82,78 @@ export function Sidebar() {
           </nav>
         </div>
 
-        {/* Recent Projects */}
+        {/* Projects Section */}
         <div>
-          <div className="text-[9px] font-mono uppercase tracking-widest text-[var(--text-tertiary)] px-4 mb-2">
-            PROJECTS
+          <div className="flex items-center justify-between px-4 mb-2">
+            <div className="text-[9px] font-mono uppercase tracking-widest text-[var(--text-tertiary)]">
+              PROJECTS
+            </div>
+            {sidebarProjects.length > 0 && (
+              <Link to="/projects" className="text-[9px] font-bold text-[var(--accent)] hover:underline uppercase tracking-tighter">
+                View All
+              </Link>
+            )}
           </div>
           <div className="px-2 flex flex-col gap-0.5">
-            {recentProjects.map((project, i) => (
-              <button
-                key={i}
-                className="flex items-center w-full h-[32px] px-2 rounded-lg text-[12px] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors text-left"
-              >
-                <div 
-                  className="w-[6px] h-[6px] rounded-full mr-2 shrink-0" 
-                  style={{ backgroundColor: project.color }}
-                />
-                <span className="truncate">{project.name}</span>
-              </button>
-            ))}
+            {isLoading ? (
+              [1, 2, 3].map(i => (
+                <div key={i} className="h-8 w-full bg-slate-50 animate-pulse rounded-lg mx-2" />
+              ))
+            ) : sidebarProjects.length > 0 ? (
+              sidebarProjects.map((project) => (
+                <Link
+                  key={project.id}
+                  to={`/projects/${project.id}`}
+                  className="flex items-center w-full h-[32px] px-2 rounded-lg text-[12px] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors text-left"
+                >
+                  <div 
+                    className="w-[6px] h-[6px] rounded-full mr-2 shrink-0" 
+                    style={{ backgroundColor: statusColors[project.status] }}
+                  />
+                  <span className="truncate">{project.name}</span>
+                </Link>
+              ))
+            ) : (
+              <div className="px-4 py-2">
+                <p className="text-[10px] text-[var(--text-tertiary)] italic">No active projects</p>
+                <button 
+                  onClick={openModal}
+                  className="flex items-center gap-1.5 mt-2 text-[10px] font-bold text-[var(--accent)] hover:opacity-80 transition-opacity"
+                >
+                  <PlusCircle className="w-3 h-3" />
+                  Create project
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       {/* Bottom User Row */}
       <div className="mt-auto p-2.5 border-t border-[var(--border-subtle)] flex items-center gap-2 shrink-0">
-        <div className="w-[26px] h-[26px] rounded-full bg-gradient-to-br from-[#7C3AED] to-[#DB2777] shrink-0" />
+        <div className="w-[26px] h-[26px] rounded-full bg-gradient-to-br from-[var(--accent)] to-indigo-600 flex items-center justify-center text-[10px] font-bold text-white shrink-0">
+          {user?.email?.charAt(0).toUpperCase() || 'U'}
+        </div>
         <div className="flex flex-col flex-1 min-w-0">
           <span className="text-[12px] font-medium text-[var(--text-primary)] truncate">
-            Nadia Rahman
+            {user?.email?.split('@')[0] || 'Studio User'}
           </span>
           <span className="text-[10px] text-[var(--text-tertiary)] truncate">
-            Owner
+            {user ? 'Admin' : 'Studio Access'}
           </span>
         </div>
-        <button className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors shrink-0">
-          <Settings className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors shrink-0">
+            <Settings className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => supabase.auth.signOut()}
+            className="w-6 h-6 rounded-md flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors shrink-0"
+            title="Log Out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

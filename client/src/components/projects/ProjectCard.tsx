@@ -2,80 +2,110 @@ import { Project } from '../../types/project';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Calendar, Clock } from 'lucide-react';
-import { formatDistanceToNow, isBefore } from 'date-fns';
+import { Calendar as CalendarIcon, Clock, Users } from 'lucide-react';
+import { formatDistanceToNow, isBefore, differenceInDays } from 'date-fns';
 
 interface ProjectCardProps {
   project: Project;
 }
 
 const statusColors: Record<string, string> = {
-  draft: 'bg-gray-300',
-  active: 'bg-green-500',
+  draft: 'bg-gray-400',
+  active: 'bg-emerald-500',
   on_hold: 'bg-amber-500',
   completed: 'bg-blue-500',
 };
 
 const phaseLabel: Record<string, string> = {
-  schematic: 'Schematic',
-  design_dev: 'Design Dev',
-  construction_docs: 'Construction Docs',
-  closeout: 'Closeout',
+  schematic: 'Schematic Design',
+  design_dev: 'Design Development',
+  construction_docs: 'Construction Documents',
+  closeout: 'Project Closeout',
 };
 
 const phaseColors: Record<string, string> = {
-  schematic: 'bg-purple-100 text-purple-700',
-  design_dev: 'bg-blue-100 text-blue-700',
-  construction_docs: 'bg-orange-100 text-orange-700',
-  closeout: 'bg-green-100 text-green-700',
+  schematic: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
+  design_dev: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  construction_docs: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  closeout: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 };
 
 export function ProjectCard({ project }: ProjectCardProps) {
-  const isOverdue = project.deadline && isBefore(new Date(project.deadline), new Date()) && project.status !== 'completed';
+  const deadlineDate = project.deadline ? new Date(project.deadline) : null;
+  const isOverdue = deadlineDate && isBefore(deadlineDate, new Date()) && project.status !== 'completed';
+  const daysLeft = deadlineDate ? differenceInDays(deadlineDate, new Date()) : null;
+  
+  const getUrgencyColor = () => {
+    if (isOverdue) return 'text-red-500 font-bold';
+    if (daysLeft !== null && daysLeft < 7) return 'text-orange-500 font-semibold';
+    return 'text-[var(--text-tertiary)]';
+  };
+
+  // Mock members for now
+  const members = [
+    { name: 'John Doe', image: null },
+    { name: 'Alice Smith', image: null },
+    { name: 'Bob Johnson', image: null },
+    { name: 'Sarah Wilson', image: null },
+    { name: 'Mike Brown', image: null },
+  ];
+  const maxAvatars = 4;
+  const displayedMembers = members.slice(0, maxAvatars);
+  const remainingCount = members.length - maxAvatars;
 
   return (
-    <Card className="overflow-hidden bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-sm hover:shadow-md transition-shadow">
+    <Card className="group overflow-hidden bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full border-t-2 border-t-transparent hover:border-t-[var(--accent)]">
       {/* Cover Image */}
-      <div className="aspect-video w-full relative bg-gradient-to-br from-slate-100 to-slate-200">
+      <div className="aspect-[16/9] w-full relative bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-950 overflow-hidden">
         {project.cover_image_url ? (
           <img 
             src={project.cover_image_url} 
             alt={project.name} 
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center opacity-20">
-             <div className="w-12 h-12 rounded-full border-4 border-slate-400 border-dashed" />
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[var(--accent)] to-indigo-600 opacity-20" />
         )}
-        <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/40 backdrop-blur-sm border border-white/20">
-          <div className={`w-1.5 h-1.5 rounded-full ${statusColors[project.status]}`} />
+        
+        {/* Status Indicator Dot */}
+        <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg">
+          <div className={`w-2 h-2 rounded-full animate-pulse shadow-[0_0_8px] ${statusColors[project.status]} ${
+            project.status === 'active' ? 'shadow-emerald-500/50' : 
+            project.status === 'on_hold' ? 'shadow-amber-500/50' : 
+            'shadow-gray-500/50'
+          }`} />
           <span className="text-[10px] font-bold text-white uppercase tracking-wider">
-            {project.status}
+            {project.status.replace('_', ' ')}
           </span>
+        </div>
+
+        <div className="absolute bottom-3 left-3">
+           <Badge className={`px-2.5 py-0.5 text-[10px] font-bold border-none rounded-md shadow-lg ${phaseColors[project.phase]}`}>
+            {phaseLabel[project.phase]}
+          </Badge>
         </div>
       </div>
 
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between mb-2">
-          <h4 className="text-base font-semibold text-[var(--text-primary)] leading-tight truncate">
-            {project.name}
-          </h4>
-        </div>
+      <CardContent className="p-5 flex-1 flex flex-col">
+        <h4 className="text-lg font-bold text-[var(--text-primary)] leading-snug tracking-tight group-hover:text-[var(--accent)] transition-colors mb-2">
+          {project.name}
+        </h4>
         
-        <Badge className={`mb-4 px-2 py-0 h-5 text-[10px] font-semibold border-none rounded-md ${phaseColors[project.phase]}`}>
-          {phaseLabel[project.phase]}
-        </Badge>
+        <p className="text-sm text-[var(--text-secondary)] line-clamp-2 mb-4 leading-relaxed italic">
+          {project.description || 'No description provided for this architectural project.'}
+        </p>
 
-        <div className="flex flex-col gap-2 mb-4">
-          <div className={`flex items-center gap-1.5 text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-[var(--text-tertiary)]'}`}>
-            <Calendar className="w-3.5 h-3.5" />
+        <div className="mt-auto space-y-2.5">
+          <div className={`flex items-center gap-2 text-xs transition-colors ${getUrgencyColor()}`}>
+            <CalendarIcon className="w-4 h-4" />
             <span>
-              {project.deadline ? `Deadline ${new Date(project.deadline).toLocaleDateString()}` : 'No deadline'}
+              {deadlineDate 
+                ? `${isOverdue ? 'Overdue' : 'Due'} ${formatDistanceToNow(deadlineDate, { addSuffix: true })}` 
+                : 'No deadline set'}
             </span>
           </div>
-          <div className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)]">
-            <Clock className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
+            <Clock className="w-4 h-4" />
             <span>
               Updated {formatDistanceToNow(new Date(project.updated_at), { addSuffix: true })}
             </span>
@@ -83,20 +113,27 @@ export function ProjectCard({ project }: ProjectCardProps) {
         </div>
       </CardContent>
 
-      <CardFooter className="p-5 pt-0 flex items-center justify-between border-t border-[var(--border-subtle)] mt-auto h-[53px]">
+      <CardFooter className="px-5 py-4 flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-raised)]/50">
         <div className="flex -space-x-2">
-          {[1, 2, 3].map((_, i) => (
-            <Avatar key={i} className="w-6 h-6 border-2 border-[var(--bg-surface)]">
-              <AvatarFallback className="text-[9px]">U{i}</AvatarFallback>
+          {displayedMembers.map((member, i) => (
+            <Avatar key={i} className="w-7 h-7 border-2 border-[var(--bg-surface)] shadow-sm">
+              <AvatarImage src={member.image || ''} />
+              <AvatarFallback className="text-[9px] font-bold bg-slate-100 text-slate-600">
+                {member.name.split(' ').map(n => n[0]).join('')}
+              </AvatarFallback>
             </Avatar>
           ))}
-          <div className="w-6 h-6 rounded-full bg-[var(--bg-raised)] border-2 border-[var(--bg-surface)] flex items-center justify-center text-[9px] font-medium text-[var(--text-tertiary)]">
-            +4
-          </div>
+          {remainingCount > 0 && (
+            <div className="w-7 h-7 rounded-full bg-[var(--bg-surface)] border-2 border-[var(--border-subtle)] flex items-center justify-center text-[9px] font-bold text-[var(--text-secondary)] shadow-sm">
+              +{remainingCount}
+            </div>
+          )}
         </div>
-        <button className="text-xs font-semibold text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors">
-          View details
-        </button>
+        
+        <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] cursor-pointer hover:underline">
+          <Users className="w-3.5 h-3.5" />
+          <span>Team</span>
+        </div>
       </CardFooter>
     </Card>
   );

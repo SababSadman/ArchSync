@@ -36,38 +36,61 @@ export function useCreateProject() {
 
   return useMutation({
     mutationFn: async (newProject: CreateProjectInput) => {
+      // Get real user session
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('You must be logged in to create projects');
+
+      // Prepare project data
+      const projectData = {
+        ...newProject,
+        created_by: user.id,
+        // Using a valid-looking UUID placeholder if none exists
+        organization_id: user.user_metadata?.organization_id || '00000000-0000-0000-0000-000000000000',
+        cover_image_url: null,
+      };
+
+      console.log('[CreateProject] Attempting insert:', projectData);
+
       const { data, error } = await supabase
         .from('projects')
-        .insert([newProject])
+        .insert([projectData])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[CreateProject Error]', error);
+        throw error;
+      }
       return data as Project;
     },
     onMutate: async (newProject) => {
+      console.log('[CreateProject] Mutation started:', newProject);
       await queryClient.cancelQueries({ queryKey: ['projects'] });
       const previousProjects = queryClient.getQueryData(['projects']);
       
       // Optimistic update
-      queryClient.setQueryData(['projects'], (old: Project[] | undefined) => [
-        ...(old || []),
-        { 
+      queryClient.setQueryData(['projects'], (old: Project[] | undefined) => {
+        const optimisticProject = { 
           ...newProject, 
-          id: 'temp-' + Date.now(), 
+          id: '00000000-0000-0000-0000-' + Date.now(), 
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-          organization_id: 'temp-org', // Should be replaced by actual org context
-          created_by: 'temp-user', // Should be replaced by actual user context
-        } as Project
-      ]);
+          organization_id: '00000000-0000-0000-0000-000000000000',
+          created_by: '00000000-0000-0000-0000-000000000000', // Better placeholder
+          cover_image_url: null,
+        } as Project;
+        console.log('[CreateProject] Adding optimistic project:', optimisticProject);
+        return [...(old || []), optimisticProject];
+      });
 
       return { previousProjects };
     },
     onError: (err, newProject, context) => {
+      console.error('[CreateProject] Mutation failed, rolling back:', err);
       queryClient.setQueryData(['projects'], context?.previousProjects);
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[CreateProject] Mutation successful:', data);
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });
