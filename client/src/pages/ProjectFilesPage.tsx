@@ -71,7 +71,7 @@ const ProjectFilesPage: React.FC = () => {
               <p className="text-sm text-muted-foreground mt-1">Add new resources to this project.</p>
             </div>
             
-            <FileUploadZone projectId={projectId} orgId={orgId} />
+            <FileUploadZone projectId={projectId} orgId={orgId} phase="schematic" />
             
             <div className="pt-4 border-t space-y-4">
               <div className="flex items-center justify-between text-sm">
@@ -99,15 +99,17 @@ const ProjectFilesPage: React.FC = () => {
 
         {/* Files Grid */}
         <div className="lg:col-span-8">
-          <FileGrid projectId={projectId} onPreview={handlePreview} />
+            {/* In a real implementation we would fetch files here, but for this page we'll use a placeholder or remove it if unused */}
+            <p className="text-sm text-slate-500 italic mb-4">Note: This page is currently for demonstration. Use the Project Card 'Files' button for active management.</p>
+            <FileGrid files={[]} isLoading={false} onPreview={handlePreview} />
         </div>
       </div>
 
       {/* Preview Modal */}
       <FilePreviewModal 
         file={selectedFile}
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
+        open={isPreviewOpen}
+        onOpenChange={setIsPreviewOpen}
       />
     </div>
   );

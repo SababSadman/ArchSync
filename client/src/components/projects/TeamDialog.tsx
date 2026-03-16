@@ -80,8 +80,11 @@ export function TeamDialog({ projectId, projectName, createdBy, open, onOpenChan
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] bg-[var(--bg-surface)] border-[var(--border-subtle)] p-0 overflow-hidden shadow-2xl">
-        <div className="h-1.5 w-full bg-gradient-to-r from-[var(--accent)] to-indigo-600" />
+      <DialogContent 
+        onClose={() => onOpenChange(false)}
+        className="sm:max-w-[480px] bg-[var(--bg-surface)] border-[var(--border-subtle)] p-0 shadow-2xl"
+      >
+        <div className="h-1.5 w-full bg-gradient-to-r from-[var(--accent)] to-indigo-600 rounded-t-xl" />
         
         <div className="px-6 pt-6 pb-2">
           <DialogHeader>

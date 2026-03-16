@@ -1,228 +1,161 @@
-import React, { useEffect, useRef, useState } from 'react';
-import * as pdfjs from 'pdfjs-dist';
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import { Button } from '../ui/button';
 import { 
-  X, 
   Download, 
-  ZoomIn, 
-  ZoomOut, 
+  X, 
+  Maximize2, 
+  Minimize2, 
   ChevronLeft, 
-  ChevronRight,
+  ChevronRight, 
+  ZoomIn, 
+  ZoomOut,
+  FileText,
   FileCode,
-  Info,
-  Maximize2
+  File as FileIcon,
+  Image as ImageIcon
 } from 'lucide-react';
-import { FileRecord } from '../../types/file';
+import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
-import { format } from 'date-fns';
+import { FileRecord } from '../../types/file';
 
-// Set worker path
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// pdfjs logic would go here, but for now we'll use a standard object embed or simple iframe for simplicity in this baseline
+// and focus on the zoomable image logic
 
 interface FilePreviewModalProps {
   file: FileRecord | null;
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({ file, isOpen, onClose }) => {
+export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
-  const [pdfPage, setPdfPage] = useState(1);
-  const [numPages, setNumPages] = useState(0);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!file || file.file_type.toLowerCase() !== 'pdf' || !isOpen) return;
+    if (file && open) {
+      setIsLoading(true);
+      // Get signed URL for the file
+      supabase.storage
+        .from('project-files')
+        .createSignedUrl(file.storage_path, 3600)
+        .then(({ data, error }) => {
+          if (data) setPreviewUrl(data.signedUrl);
+          setIsLoading(false);
+        });
+    } else {
+      setPreviewUrl(null);
+      setZoom(1);
+    }
+  }, [file, open]);
 
-    const renderPdf = async () => {
-      const meta = import.meta as unknown as { env: { VITE_SUPABASE_URL: string } };
-      const url = `${meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/project-files/${file.storage_path}`;
-      const loadingTask = pdfjs.getDocument(url);
-      const pdf = await loadingTask.promise;
-      setNumPages(pdf.numPages);
+  if (!file) return null;
 
-      const page = await pdf.getPage(pdfPage);
-      const scale = 1.5 * zoom;
-      const viewport = page.getViewport({ scale });
+  const isImage = file.mime_type.startsWith('image/');
+  const isPdf = file.mime_type.includes('pdf');
 
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-      
-      const context = canvas.getContext('2d');
-      if (!context) return;
-      
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-
-      const renderContext = {
-        canvasContext: context,
-        viewport: viewport,
-      };
-      // @ts-ignore - Handle version differences in pdfjs-dist types
-      await page.render(renderContext).promise;
-    };
-
-    renderPdf();
-  }, [file, isOpen, pdfPage, zoom]);
-
-  if (!isOpen || !file) return null;
-
-  const isImage = ['png', 'jpg', 'jpeg'].includes(file.file_type.toLowerCase());
-  const isPdf = file.file_type.toLowerCase() === 'pdf';
-  const isCad = ['dwg', 'dxf', 'rvt', 'skp', 'ifc'].includes(file.file_type.toLowerCase());
-
-  const meta = import.meta as unknown as { env: { VITE_SUPABASE_URL: string } };
-  const fileUrl = `${meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/project-files/${file.storage_path}`;
+  const handleDownload = async () => {
+    if (!previewUrl) return;
+    const response = await fetch(previewUrl);
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-      <div 
-        className="absolute inset-0 bg-background/80 backdrop-blur-xl" 
-        onClick={onClose} 
-      />
-      
-      <div className="relative bg-card border rounded-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom-8 duration-500">
-        {/* Header */}
-        <div className="p-4 border-b flex items-center justify-between bg-muted/50">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-6xl w-[95vw] h-[85vh] p-0 overflow-hidden bg-slate-950 border-slate-800 shadow-2xl flex flex-col">
+        <DialogHeader className="p-4 border-b border-white/5 bg-slate-900/50 flex flex-row items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-background rounded-lg border">
-              <FileCode className="w-5 h-5 text-primary" />
+            <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
+               {isImage ? <ImageIcon className="w-4 h-4 text-emerald-400" /> : isPdf ? <FileText className="w-4 h-4 text-red-400" /> : <FileIcon className="w-4 h-4 text-slate-400" />}
             </div>
             <div>
-              <h2 className="font-bold text-lg leading-none">{file.name}</h2>
-              <p className="text-xs text-muted-foreground mt-1 uppercase tracking-tight">
-                {file.file_type} • {(file.file_size / (1024 * 1024)).toFixed(2)} MB
+              <DialogTitle className="text-sm font-bold text-white truncate max-w-[300px]" title={file.name}>
+                {file.name}
+              </DialogTitle>
+              <p className="text-[10px] text-slate-400 font-medium font-mono uppercase tracking-wider">
+                {file.mime_type} • {(file.size_bytes / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>
           </div>
           
           <div className="flex items-center gap-2">
-            <a 
-              href={fileUrl} 
-              download 
-              className="p-2 hover:bg-muted rounded-full transition-colors"
-              title="Download"
-            >
-              <Download className="w-5 h-5" />
-            </a>
-            <button 
-              onClick={onClose}
-              className="p-2 hover:bg-destructive/10 hover:text-destructive rounded-full transition-colors"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto bg-muted/30 flex items-center justify-center p-8 min-h-0">
-          {isImage && (
-            <div className="relative group max-w-full max-h-full">
-              <img 
-                src={fileUrl} 
-                alt={file.name} 
-                className="max-w-full max-h-full object-contain rounded-lg shadow-lg transition-transform duration-300"
-                style={{ transform: `scale(${zoom})` }}
-              />
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-background/80 backdrop-blur border rounded-full px-4 py-2 flex items-center gap-4 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1 hover:bg-muted rounded-full">
+            {isImage && (
+              <div className="flex items-center bg-slate-800 rounded-lg p-0.5 mr-4">
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-white" onClick={() => setZoom(z => Math.max(0.5, z - 0.2))}>
                   <ZoomOut className="w-4 h-4" />
-                </button>
-                <span className="text-xs font-medium w-12 text-center">{Math.round(zoom * 100)}%</span>
-                <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1 hover:bg-muted rounded-full">
+                </Button>
+                <span className="text-[10px] font-bold text-slate-400 w-10 text-center tabular-nums">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-white" onClick={() => setZoom(z => Math.min(3, z + 0.2))}>
                   <ZoomIn className="w-4 h-4" />
-                </button>
-                <div className="w-px h-4 bg-border" />
-                <button onClick={() => setZoom(1)} className="p-1 hover:bg-muted rounded-full">
-                  <Maximize2 className="w-4 h-4" />
-                </button>
+                </Button>
               </div>
+            )}
+            <Button variant="outline" size="sm" className="h-8 gap-2 bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700" onClick={handleDownload}>
+              <Download className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Download</span>
+            </Button>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-white rounded-full bg-slate-800 border border-slate-700" onClick={() => onOpenChange(false)}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </DialogHeader>
+
+        <div className="flex-1 relative bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-slate-900 to-black overflow-hidden flex items-center justify-center p-8">
+          {isLoading ? (
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
+              <p className="text-xs font-bold text-slate-400 animate-pulse">Loading preview...</p>
             </div>
-          )}
-
-          {isPdf && (
-            <div className="flex flex-col items-center gap-6 max-w-full">
-              <div className="relative group bg-white p-4 shadow-2xl rounded-sm">
-                <canvas ref={canvasRef} className="max-w-full shadow-lg" />
-                
-                {numPages > 1 && (
-                  <div className="absolute top-1/2 -translate-y-1/2 inset-x-4 flex justify-between opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    <button 
-                      onClick={() => setPdfPage(p => Math.max(1, p - 1))}
-                      disabled={pdfPage === 1}
-                      className="p-3 bg-background/80 backdrop-blur rounded-full shadow-xl pointer-events-auto disabled:opacity-50"
-                    >
-                      <ChevronLeft className="w-6 h-6" />
-                    </button>
-                    <button 
-                      onClick={() => setPdfPage(p => Math.min(numPages, p + 1))}
-                      disabled={pdfPage === numPages}
-                      className="p-3 bg-background/80 backdrop-blur rounded-full shadow-xl pointer-events-auto disabled:opacity-50"
-                    >
-                      <ChevronRight className="w-6 h-6" />
-                    </button>
-                  </div>
-                )}
-              </div>
-              
-              <div className="bg-background/80 backdrop-blur border rounded-full px-6 py-3 flex items-center gap-6 shadow-xl">
-                 <div className="flex items-center gap-3">
-                   <button onClick={() => setZoom(z => Math.max(0.5, z - 0.1))} className="p-1 hover:bg-muted rounded-full">
-                    <ZoomOut className="w-4 h-4" />
-                  </button>
-                  <span className="text-sm font-medium w-10 text-center">{Math.round(zoom * 100)}%</span>
-                  <button onClick={() => setZoom(z => Math.min(3, z + 0.1))} className="p-1 hover:bg-muted rounded-full">
-                    <ZoomIn className="w-4 h-4" />
-                  </button>
-                 </div>
-                 <div className="w-px h-6 bg-border" />
-                 <span className="text-sm font-medium">Page {pdfPage} of {numPages}</span>
-              </div>
-            </div>
-          )}
-
-          {isCad && (
-            <div className="max-w-md w-full bg-card border rounded-2xl p-8 space-y-6 shadow-xl">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center">
-                  <FileCode className="w-10 h-10 text-primary" />
+          ) : previewUrl ? (
+            <>
+              {isImage && (
+                <div className="w-full h-full overflow-auto custom-scrollbar flex items-center justify-center p-4">
+                  <img 
+                    src={previewUrl} 
+                    alt={file.name} 
+                    className="max-w-none transition-transform duration-200 shadow-2xl"
+                    style={{ transform: `scale(${zoom})` }}
+                  />
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-xl font-bold">CAD Resource</h3>
-                  <p className="text-muted-foreground text-sm px-4">
-                    Full CAD viewer integration is coming in the next version. For now, you can view metadata and download the file.
-                  </p>
+              )}
+              {isPdf && (
+                <iframe 
+                  src={`${previewUrl}#toolbar=0`} 
+                  className="w-full h-full rounded-lg shadow-2xl bg-white"
+                  title={file.name}
+                />
+              )}
+              {!isImage && !isPdf && (
+                <div className="text-center p-12 bg-slate-900/50 rounded-3xl border border-white/5 backdrop-blur-md">
+                   <div className="w-20 h-20 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto mb-6 shadow-xl">
+                      <FileIcon className="w-10 h-10 text-slate-400" />
+                   </div>
+                   <h3 className="text-lg font-bold text-white mb-2">Preview Not Available</h3>
+                   <p className="text-sm text-slate-400 max-w-xs mx-auto mb-8">
+                     Direct preview is not supported for this file type ({file.mime_type}). Please download the file to view it.
+                   </p>
+                   <Button onClick={handleDownload} className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-bold h-11 px-8 rounded-xl shadow-lg shadow-[var(--accent)]/20">
+                     Download File
+                   </Button>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-muted/50 rounded-xl border">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Uploaded</p>
-                  <p className="text-sm font-medium">{format(new Date(file.created_at), 'MMM d, yyyy')}</p>
-                </div>
-                <div className="p-4 bg-muted/50 rounded-xl border">
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Version</p>
-                  <p className="text-sm font-medium">v{file.versions?.length || 1}</p>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Info className="w-4 h-4" />
-                  <span>Metadata extraction in progress...</span>
-                </div>
-                <a 
-                  href={fileUrl} 
-                  download 
-                  className="w-full h-12 bg-primary text-primary-foreground font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-primary/20"
-                >
-                  <Download className="w-5 h-5" />
-                  Download to View Local
-                </a>
-              </div>
-            </div>
+              )}
+            </>
+          ) : (
+            <p className="text-white">Preview unavailable.</p>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
-};
+}

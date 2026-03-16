@@ -29,6 +29,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
   const [phase, setPhase] = useState<ProjectPhase>('schematic');
   const [projectType, setProjectType] = useState<ProjectType>('residential');
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   const createMutation = useCreateProject();
 
@@ -138,24 +139,30 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
               <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
                 Deadline
               </label>
-              <Popover>
+              <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-medium bg-[var(--bg-surface)] border-[var(--border-default)] h-11 transition-all hover:border-[var(--accent)] px-4",
-                      !deadline && "justify-center"
+                      "w-full justify-start text-left font-medium bg-[var(--bg-surface)] border-[var(--border-default)] h-11 transition-all hover:border-[var(--accent)] px-4"
                     )}
                   >
-                    <CalendarIcon className={cn("h-5 w-5 text-[var(--accent)]", deadline && "mr-3")} />
-                    {deadline && <span className="text-sm font-bold">{format(deadline, "PPP")}</span>}
+                    <CalendarIcon className="h-5 w-5 text-[var(--accent)] mr-3 shrink-0" />
+                    {deadline ? (
+                      <span className="text-sm font-bold truncate">{format(deadline, "PPP")}</span>
+                    ) : (
+                      <span className="text-sm text-[var(--text-tertiary)]">Select deadline...</span>
+                    )}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 flex flex-col shadow-2xl border-[var(--border-subtle)]" align="start" sideOffset={8}>
                   <Calendar
                     mode="single"
                     selected={deadline}
-                    onSelect={setDeadline}
+                    onSelect={(date) => {
+                      setDeadline(date);
+                      setCalendarOpen(false);
+                    }}
                     initialFocus
                     className="p-3 bg-[var(--bg-surface)]"
                   />

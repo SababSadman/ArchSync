@@ -11,11 +11,20 @@ const PopoverContext = React.createContext<PopoverContextType>({
   setOpen: () => {},
 })
 
-function Popover({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = React.useState(false)
+interface PopoverProps {
+  children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
+}
+
+function Popover({ children, open: controlledOpen, onOpenChange }: PopoverProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false)
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen
+  const setOpen = onOpenChange !== undefined ? onOpenChange : setUncontrolledOpen
+
   return (
     <PopoverContext.Provider value={{ open, setOpen }}>
-      <div className="relative inline-block">{children}</div>
+      <div className="relative inline-block w-full">{children}</div>
     </PopoverContext.Provider>
   )
 }

@@ -1,162 +1,164 @@
-import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '../../lib/supabase';
-import { FileRecord } from '../../types/file';
-import { getFileIcon } from './FileUploadZone';
+import { useMemo } from 'react';
+import { Card, CardContent } from '../ui/card';
+import { Badge } from '../ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { 
+  FileText, 
+  FileCode, 
+  FileIcon, 
+  Image as ImageIcon, 
   Download, 
   Eye, 
   History, 
-  MoreVertical,
-  Calendar,
-  User as UserIcon
+  MoreVertical 
 } from 'lucide-react';
+import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 import { format } from 'date-fns';
+import { FileRecord } from '../../types/file';
 
 interface FileGridProps {
-  projectId: string;
-  onPreview: (file: FileRecord) => void;
+  files: FileRecord[];
+  isLoading?: boolean;
+  onPreview?: (file: FileRecord) => void;
+  onDownload?: (file: FileRecord) => void;
+  onViewVersions?: (file: FileRecord) => void;
 }
 
-export const FileGrid: React.FC<FileGridProps> = ({ projectId, onPreview }) => {
-  const { data: files, isLoading } = useQuery({
-    queryKey: ['files', projectId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('files')
-        .select(`
-          *,
-          versions:file_versions(*)
-        `)
-        .eq('project_id', projectId)
-        .order('created_at', { ascending: false });
+const phaseOrder = ['schematic', 'design_dev', 'construction', 'closeout'];
+const phaseLabels: Record<string, string> = {
+  schematic: 'Schematic Design',
+  design_dev: 'Design Development',
+  construction: 'Construction Documents',
+  closeout: 'Project Closeout'
+};
 
-      if (error) throw error;
-      return data as FileRecord[];
-    },
-  });
+export function FileGrid({ files, isLoading, onPreview, onDownload, onViewVersions }: FileGridProps) {
+  const groupedFiles = useMemo(() => {
+    const groups: Record<string, FileRecord[]> = {};
+    files.forEach(file => {
+      if (!groups[file.phase]) groups[file.phase] = [];
+      groups[file.phase].push(file);
+    });
+    return groups;
+  }, [files]);
+
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType.startsWith('image/')) return <ImageIcon className="w-8 h-8 text-emerald-500/80" />;
+    if (mimeType.includes('pdf')) return <FileText className="w-8 h-8 text-red-500/80" />;
+    if (mimeType.includes('dwg') || mimeType.includes('dxf')) return <FileCode className="w-8 h-8 text-blue-500/80" />;
+    return <FileIcon className="w-8 h-8 text-slate-400/80" />;
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {[...Array(8)].map((_, i) => (
-          <div key={i} className="h-64 rounded-xl bg-muted animate-pulse" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-48 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-[var(--border-subtle)]" />
         ))}
-      </div>
-    );
-  }
-
-  // Grouping by Phase (Mock logic for now, ideally phase comes from file metadata)
-  const groupedFiles = files?.reduce((acc, file) => {
-    const phase = file.phase || 'Uncategorized';
-    if (!acc[phase]) acc[phase] = [];
-    acc[phase].push(file);
-    return acc;
-  }, {} as Record<string, FileRecord[]>);
-
-  if (!files || files.length === 0) {
-    return (
-      <div className="text-center py-20 border-2 border-dashed rounded-2xl border-muted-foreground/10">
-        <p className="text-muted-foreground">No files uploaded yet.</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-12">
-      {Object.entries(groupedFiles || {}).map(([phase, phaseFiles]) => (
-        <div key={phase} className="space-y-6">
-          <div className="flex items-center gap-4">
-            <h3 className="text-lg font-bold capitalize">{phase.replace(/_/g, ' ')}</h3>
-            <div className="h-px flex-1 bg-border" />
-            <span className="text-sm text-muted-foreground">{phaseFiles.length} files</span>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {phaseFiles.map((file) => (
-              <FileCard key={file.id} file={file} onPreview={onPreview} />
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
+      {phaseOrder.map(phase => {
+        const phaseFiles = groupedFiles[phase] || [];
+        if (phaseFiles.length === 0) return null;
 
-const FileCard = ({ file, onPreview }: { file: FileRecord; onPreview: (f: FileRecord) => void }) => {
-  const isImage = ['png', 'jpg', 'jpeg'].includes(file.file_type.toLowerCase());
-  
-  // In a real app, we'd get the public URL or signed URL for the thumbnail
-  const meta = import.meta as unknown as { env: { VITE_SUPABASE_URL: string } };
-  const thumbnailUrl = isImage 
-    ? `${meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/project-files/${file.storage_path}`
-    : null;
-
-  return (
-    <div className="group relative bg-card border rounded-xl overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-      {/* Thumbnail / Icon Area */}
-      <div className="aspect-video bg-muted flex items-center justify-center relative overflow-hidden">
-        {thumbnailUrl ? (
-          <img 
-            src={thumbnailUrl} 
-            alt={file.name} 
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="scale-150 transform group-hover:scale-[1.7] transition-transform duration-500 opacity-20">
-            {getFileIcon(file.name)}
-          </div>
-        )}
-        
-        {/* Hover Overlay */}
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center gap-2">
-          <button 
-            onClick={() => onPreview(file)}
-            className="p-2 bg-primary text-primary-foreground rounded-full hover:scale-110 transition-transform shadow-lg" 
-            title="Preview"
-          >
-            <Eye className="w-5 h-5" />
-          </button>
-          <button className="p-2 bg-secondary text-secondary-foreground rounded-full hover:scale-110 transition-transform shadow-lg" title="Download">
-            <Download className="w-5 h-5" />
-          </button>
-          <button className="p-2 bg-secondary text-secondary-foreground rounded-full hover:scale-110 transition-transform shadow-lg" title="Versions">
-            <History className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button className="p-1 hover:bg-background/50 rounded-md">
-            <MoreVertical className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Info Area */}
-      <div className="p-4 space-y-3">
-        <div>
-          <h4 className="font-semibold text-sm truncate" title={file.name}>{file.name}</h4>
-          <p className="text-xs text-muted-foreground mt-1">
-            {(file.file_size / (1024 * 1024)).toFixed(1)} MB • {file.file_type.toUpperCase()}
-          </p>
-        </div>
-
-        <div className="flex items-center justify-between pt-2 border-t">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
-              <UserIcon className="w-3.5 h-3.5 text-primary" />
+        return (
+          <div key={phase} className="space-y-5">
+            <div className="flex items-center gap-3">
+              <div className="h-1 w-8 bg-[var(--accent)] rounded-full" />
+              <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[var(--text-tertiary)]">
+                {phaseLabels[phase]} ({phaseFiles.length})
+              </h3>
             </div>
-            <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-              Project Lead
-            </span>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {phaseFiles.map((file) => (
+                <Card key={file.id} className="group overflow-hidden bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-sm hover:shadow-xl transition-all duration-300 relative border-b-2 border-b-transparent hover:border-b-[var(--accent)]">
+                  {/* Thumbnail / Icon Area */}
+                  <div className="aspect-[16/10] bg-slate-50 dark:bg-slate-900/50 flex items-center justify-center relative overflow-hidden">
+                    {file.mime_type.startsWith('image/') ? (
+                      // We'd ideally use a pre-signed URL here for private storage
+                      <div className="absolute inset-0 flex items-center justify-center bg-slate-100">
+                        {getFileIcon(file.mime_type)}
+                      </div>
+                    ) : (
+                      getFileIcon(file.mime_type)
+                    )}
+
+                    {/* Hover Overlays */}
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <Button size="icon" variant="ghost" className="h-9 w-9 bg-white/10 hover:bg-white/20 text-white rounded-full" onClick={() => onPreview?.(file)}>
+                        <Eye className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 bg-white/10 hover:bg-white/20 text-white rounded-full" onClick={() => onDownload?.(file)}>
+                        <Download className="w-4 h-4" />
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 bg-white/10 hover:bg-white/20 text-white rounded-full" onClick={() => onViewVersions?.(file)}>
+                        <History className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-1 mb-3">
+                      <div className="min-w-0">
+                        <h4 className="text-xs font-bold text-[var(--text-primary)] truncate" title={file.name}>
+                          {file.name}
+                        </h4>
+                        <p className="text-[10px] text-[var(--text-tertiary)] font-medium mt-0.5">
+                          {formatFileSize(file.size_bytes)} • {format(new Date(file.created_at), 'MMM d, yyyy')}
+                        </p>
+                      </div>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
+                        <MoreVertical className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 dark:border-slate-800/50">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-5 h-5 border border-white dark:border-slate-900 shadow-sm">
+                          <AvatarImage src={file.uploader?.avatar_url} />
+                          <AvatarFallback className="text-[8px] bg-slate-100 font-bold">
+                            {(file.uploader?.full_name || 'U').charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-[9px] font-bold text-[var(--text-secondary)] truncate max-w-[80px]">
+                          {file.uploader?.full_name || 'Unknown'}
+                        </span>
+                      </div>
+                      <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-tighter py-0 px-1.5 h-4 bg-slate-50 border-slate-200 text-slate-500">
+                        {file.mime_type.split('/').pop()?.toUpperCase()}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
-          <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-            <Calendar className="w-3 h-3" />
-            {format(new Date(file.created_at), 'MMM d, yyyy')}
+        );
+      })}
+
+      {files.length === 0 && (
+        <div className="py-20 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-3xl bg-slate-50/50">
+          <div className="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mx-auto mb-4 border border-[var(--border-subtle)]">
+            <FileIcon className="w-8 h-8 text-slate-200" />
           </div>
+          <p className="text-sm font-bold text-[var(--text-secondary)]">No files uploaded yet.</p>
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">Files uploaded to this phase will appear here.</p>
         </div>
-      </div>
+      )}
     </div>
   );
-};
+}

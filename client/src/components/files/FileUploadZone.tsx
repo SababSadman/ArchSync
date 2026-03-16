@@ -1,163 +1,140 @@
-import React, { useCallback, useState } from 'react';
-import { useDropzone, FileRejection } from 'react-dropzone';
-import { 
-  Upload, 
-  File, 
-  FileText, 
-  Image as ImageIcon, 
-  Video, 
-  FileCode, 
-  AlertCircle,
-  X,
-  CheckCircle2,
-  Loader2
-} from 'lucide-react';
+import { useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
+import { Upload, FileText, FileCode, CheckCircle, AlertCircle, X, Image as ImageIcon, File } from 'lucide-react';
+import { Button } from '../ui/button';
+import { useFileUpload, UploadState } from '../../hooks/useFileUpload';
 import { cn } from '../../lib/utils';
-import { useFileUpload } from '../../hooks/useFileUpload';
 
 interface FileUploadZoneProps {
   projectId: string;
   orgId: string;
+  phase: string;
+  className?: string;
+  onUploadComplete?: () => void;
 }
 
-const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
-const ACCEPTED_TYPES = {
-  'application/dwg': ['.dwg'],
-  'application/dxf': ['.dxf'],
-  'application/vnd.autodesk.revit': ['.rvt'],
-  'application/x-sketchup': ['.skp'],
-  'application/x-ifc': ['.ifc'],
-  'application/pdf': ['.pdf'],
-  'image/png': ['.png'],
-  'image/jpeg': ['.jpg', '.jpeg'],
-  'application/x-photoshop': ['.psd'],
-  'video/mp4': ['.mp4'],
-};
+export function FileUploadZone({ projectId, orgId, phase, className, onUploadComplete }: FileUploadZoneProps) {
+  const { uploads, uploadFile, cancelUpload, clearUploads } = useFileUpload({ projectId, orgId, phase });
 
-export const getFileIcon = (fileName: string) => {
-  const ext = fileName.split('.').pop()?.toLowerCase();
-  switch (ext) {
-    case 'pdf': return <FileText className="w-8 h-8 text-red-500" />;
-    case 'png':
-    case 'jpg':
-    case 'jpeg': return <ImageIcon className="w-8 h-8 text-blue-500" />;
-    case 'mp4': return <Video className="w-8 h-8 text-purple-500" />;
-    case 'dwg':
-    case 'dxf':
-    case 'rvt':
-    case 'skp':
-    case 'ifc': return <FileCode className="w-8 h-8 text-orange-500" />;
-    default: return <File className="w-8 h-8 text-gray-500" />;
-  }
-};
-
-export const FileUploadZone: React.FC<FileUploadZoneProps> = ({ projectId, orgId }) => {
-  const { uploads, uploadFile, cancelUpload } = useFileUpload(projectId, orgId);
-  const [error, setError] = useState<string | null>(null);
-
-  const onDrop = useCallback((acceptedFiles: File[], rejectedFiles: FileRejection[]) => {
-    setError(null);
-    
-    if (rejectedFiles.length > 0) {
-      const code = rejectedFiles[0].errors[0].code;
-      if (code === 'file-too-large') {
-        setError('File is too large. Max 500MB.');
-      } else if (code === 'file-invalid-type') {
-        setError('Unsupported file type.');
-      } else {
-        setError('Error selecting file.');
+  const onDrop = useCallback((acceptedFiles: File[]) => {
+    acceptedFiles.forEach(file => {
+      // Limit to 500MB
+      if (file.size > 500 * 1024 * 1024) {
+        alert(`File ${file.name} is too large (> 500MB)`);
+        return;
       }
-    }
-
-    acceptedFiles.forEach((file) => {
       uploadFile(file);
     });
   }, [uploadFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    maxSize: MAX_FILE_SIZE,
-    accept: ACCEPTED_TYPES,
+    maxSize: 500 * 1024 * 1024,
   });
 
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(ext || '')) return <ImageIcon className="w-5 h-5 text-emerald-500" />;
+    if (ext === 'pdf') return <FileText className="w-5 h-5 text-red-500" />;
+    if (['dwg', 'dxf', 'rvt'].includes(ext || '')) return <FileCode className="w-5 h-5 text-blue-500" />;
+    return <File className="w-5 h-5 text-slate-400" />;
+  };
+
   return (
-    <div className="space-y-4">
-      <div
-        {...getRootProps()}
+    <div className={cn("space-y-4", className)}>
+      <div 
+        {...getRootProps()} 
         className={cn(
-          "relative border-2 border-dashed rounded-xl p-8 transition-all duration-200 cursor-pointer flex flex-col items-center justify-center min-h-[200px]",
+          "relative border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center transition-all cursor-pointer group",
           isDragActive 
-            ? "border-primary bg-primary/5 scale-[1.01]" 
-            : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/50"
+            ? "border-[var(--accent)] bg-[var(--accent)]/5" 
+            : "border-[var(--border-default)] hover:border-[var(--accent)] hover:bg-slate-50/50"
         )}
       >
         <input {...getInputProps()} />
-        <div className="bg-primary/10 p-4 rounded-full mb-4">
-          <Upload className="w-8 h-8 text-primary" />
+        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <Upload className={cn("w-6 h-6", isDragActive ? "text-[var(--accent)]" : "text-slate-400")} />
         </div>
         <div className="text-center">
-          <p className="text-lg font-semibold">Drag & drop files here</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            or <span className="text-primary font-medium">browse files</span>
+          <p className="text-sm font-bold text-[var(--text-primary)]">
+            {isDragActive ? "Drop files here..." : "Drag & drop project files"}
           </p>
-          <p className="text-xs text-muted-foreground mt-4">
-            CAD, PDF, Images, Video (Max 500MB)
+          <p className="text-xs text-[var(--text-tertiary)] mt-1">
+            DWG, PDF, JPG, PNG or RVT (Max 500MB)
           </p>
         </div>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="mt-6 font-bold uppercase tracking-widest text-[10px] h-9"
+          onClick={(e) => {
+            e.stopPropagation();
+            // Trigger input manually if needed, but dropzone handles root click
+          }}
+        >
+          Select Files
+        </Button>
       </div>
 
-      {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm p-3 rounded-lg flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
-          <AlertCircle className="w-4 h-4" />
-          {error}
-        </div>
-      )}
-
       {uploads.length > 0 && (
-        <div className="grid gap-3 max-h-[400px] overflow-y-auto p-1">
-          {uploads.map((upload, idx) => (
-            <div 
-              key={`${upload.file.name}-${idx}`}
-              className="bg-card border rounded-lg p-4 flex items-center gap-4 animate-in slide-in-from-right-4"
+        <div className="bg-[var(--bg-raised)]/50 rounded-2xl border border-[var(--border-subtle)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-[var(--border-subtle)] flex items-center justify-between">
+            <span className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)]">
+              Upload Progress
+            </span>
+            <button 
+              onClick={clearUploads}
+              className="text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase"
             >
-              {getFileIcon(upload.file.name)}
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start mb-1">
-                  <p className="text-sm font-medium truncate">{upload.file.name}</p>
-                  <span className="text-xs text-muted-foreground">
-                    {(upload.file.size / (1024 * 1024)).toFixed(2)} MB
-                  </span>
+              Clear
+            </button>
+          </div>
+          <div className="max-h-[300px] overflow-y-auto p-2 space-y-1 custom-scrollbar">
+            {uploads.map((u) => (
+              <div key={u.id} className="flex items-center gap-3 p-2 bg-[var(--bg-surface)] rounded-xl border border-[var(--border-subtle)] shadow-sm">
+                <div className="shrink-0">
+                  {getFileIcon(u.name)}
                 </div>
-                <div className="relative h-1.5 w-full bg-muted rounded-full overflow-hidden">
-                  <div 
-                    className={cn(
-                      "absolute top-0 left-0 h-full transition-all duration-300",
-                      upload.status === 'error' ? "bg-destructive" : "bg-primary"
-                    )}
-                    style={{ width: `${upload.progress}%` }}
-                  />
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-[var(--text-primary)] truncate block mr-2">
+                      {u.name}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {u.status === 'completed' && <CheckCircle className="w-3.5 h-3.5 text-emerald-500" />}
+                      {u.status === 'error' && <AlertCircle className="w-3.5 h-3.5 text-red-500" />}
+                      <span className="text-[10px] font-black text-slate-400 tabular-nums">
+                        {u.status === 'uploading' ? `${u.progress}%` : u.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="h-1 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div 
+                      className={cn(
+                        "h-full transition-all duration-300",
+                        u.status === 'error' ? "bg-red-500" : "bg-[var(--accent)]",
+                        u.status === 'completed' && "bg-emerald-500"
+                      )}
+                      style={{ width: `${u.status === 'completed' ? 100 : u.progress}%` }}
+                    />
+                  </div>
+                  {u.error && (
+                    <p className="text-[9px] text-red-500 font-medium mt-1 leading-none">
+                      {u.error}
+                    </p>
+                  )}
                 </div>
-                {upload.error && (
-                  <p className="text-xs text-destructive mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3 h-3" />
-                    {upload.error}
-                  </p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                {upload.status === 'uploading' && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />}
-                {upload.status === 'completed' && <CheckCircle2 className="w-4 h-4 text-green-500" />}
                 <button 
-                  onClick={() => cancelUpload(upload.file)}
-                  className="p-1 hover:bg-muted rounded-md transition-colors"
+                  onClick={() => cancelUpload(u.id)}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
                 >
-                  <X className="w-4 h-4 text-muted-foreground" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
-};
+}

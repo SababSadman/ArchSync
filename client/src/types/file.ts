@@ -4,14 +4,18 @@ export interface FileRecord {
   id: string;
   name: string;
   storage_path: string;
-  file_type: string;
-  file_size: number;
+  mime_type: string;        // was file_type
+  size_bytes: number;       // was file_size
   project_id: string;
   uploaded_by: string;
   created_at: string;
   updated_at: string;
-  phase?: ProjectPhase;
+  phase: string;
   versions?: FileVersion[];
+  uploader?: {
+    full_name: string;
+    avatar_url: string;
+  };
 }
 
 export interface FileVersion {
@@ -19,7 +23,7 @@ export interface FileVersion {
   file_id: string;
   storage_path: string;
   version_number: number;
-  file_size: number;
+  size_bytes: number;       // was file_size
   uploaded_by: string;
   created_at: string;
 }

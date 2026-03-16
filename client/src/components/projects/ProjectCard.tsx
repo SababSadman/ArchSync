@@ -2,13 +2,15 @@ import { Project } from '../../types/project';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Calendar as CalendarIcon, Clock, Users, Trash2 } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Users, Trash2, FolderPlus } from 'lucide-react';
 import { formatDistanceToNow, isBefore, differenceInDays } from 'date-fns';
 import { useDeleteProject } from '../../hooks/use-projects';
 import { Button } from '../ui/button';
 import { useState } from 'react';
 import { TeamDialog } from './TeamDialog';
-import { useProjectMembers } from '../../hooks/use-members';
+import { ProjectFilesDialog } from '../files/ProjectFilesDialog';
+import { useProjectFiles } from '../../hooks/use-project-files';
+import { useProjectMembers, ProjectMember } from '../../hooks/use-members';
 
 interface ProjectCardProps {
   project: Project;
@@ -37,8 +39,10 @@ const phaseColors: Record<string, string> = {
 
 export function ProjectCard({ project }: ProjectCardProps) {
   const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const [filesDialogOpen, setFilesDialogOpen] = useState(false);
   const deleteMutation = useDeleteProject();
   const { data: members = [] } = useProjectMembers(project.id);
+  const { data: files = [] } = useProjectFiles(project.id);
   const deadlineDate = project.deadline ? new Date(project.deadline) : null;
   const isOverdue = deadlineDate && isBefore(deadlineDate, new Date()) && project.status !== 'completed';
   const daysLeft = deadlineDate ? differenceInDays(deadlineDate, new Date()) : null;
@@ -132,11 +136,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
       <CardFooter className="px-5 py-4 flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-raised)]/50">
         <div className="flex -space-x-2">
-          {displayedMembers.map((member, i) => (
+          {displayedMembers.map((member: ProjectMember, i: number) => (
             <Avatar key={member.user_id || i} className="w-7 h-7 border-2 border-[var(--bg-surface)] shadow-sm">
               <AvatarImage src={member.profile?.avatar_url || ''} />
               <AvatarFallback className="text-[9px] font-bold bg-slate-100 text-slate-600">
-                {(member.profile?.full_name || 'U').split(' ').map(n => n[0]).join('')}
+                {(member.profile?.full_name || 'U').split(' ').map((n: string) => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
           ))}
@@ -147,12 +151,21 @@ export function ProjectCard({ project }: ProjectCardProps) {
           )}
         </div>
         
-        <div 
-          className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] cursor-pointer hover:underline"
-          onClick={() => setTeamDialogOpen(true)}
-        >
-          <Users className="w-3.5 h-3.5" />
-          <span>Team</span>
+        <div className="flex items-center gap-4">
+          <div 
+            className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 cursor-pointer hover:underline"
+            onClick={() => setFilesDialogOpen(true)}
+          >
+            <FolderPlus className="w-3.5 h-3.5" />
+            <span>Files ({files.length})</span>
+          </div>
+          <div 
+            className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] cursor-pointer hover:underline"
+            onClick={() => setTeamDialogOpen(true)}
+          >
+            <Users className="w-3.5 h-3.5" />
+            <span>Team</span>
+          </div>
         </div>
       </CardFooter>
 
@@ -162,6 +175,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
         createdBy={project.created_by}
         open={teamDialogOpen}
         onOpenChange={setTeamDialogOpen}
+      />
+
+      <ProjectFilesDialog
+        projectId={project.id}
+        projectName={project.name}
+        open={filesDialogOpen}
+        onOpenChange={setFilesDialogOpen}
       />
     </Card>
   );

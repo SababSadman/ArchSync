@@ -22,7 +22,7 @@ export function useProjectMembers(projectId: string) {
         .from('project_members')
         .select(`
           *,
-          profile:profiles!project_members_user_id_fkey (
+          profile:users!project_members_user_id_fkey (
             full_name,
             avatar_url,
             email
@@ -49,9 +49,9 @@ export function useAddProjectMember() {
 
   return useMutation({
     mutationFn: async ({ projectId, email, role }: { projectId: string; email: string; role: ProjectMember['role'] }) => {
-      // 1. Find user by email in profiles
+      // 1. Find user by email in users
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+        .from('users')
         .select('id')
         .eq('email', email)
         .single();

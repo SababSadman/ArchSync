@@ -20,10 +20,14 @@ interface SelectProps {
   value: string
   onValueChange: (value: string) => void
   children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
-function Select({ value, onValueChange, children }: SelectProps) {
-  const [open, setOpen] = React.useState(false)
+function Select({ value, onValueChange, children, open: controlledOpen, onOpenChange }: SelectProps) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(false)
+  const open = controlledOpen !== undefined ? controlledOpen : uncontrolledOpen
+  const setOpen = onOpenChange !== undefined ? onOpenChange : setUncontrolledOpen
   const ref = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -32,7 +36,7 @@ function Select({ value, onValueChange, children }: SelectProps) {
     }
     document.addEventListener("mousedown", handleClick)
     return () => document.removeEventListener("mousedown", handleClick)
-  }, [])
+  }, [setOpen])
 
   return (
     <SelectContext.Provider value={{ value, onValueChange, open, setOpen }}>
