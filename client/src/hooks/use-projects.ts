@@ -40,12 +40,75 @@ export function useCreateProject() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('You must be logged in to create projects');
 
+      // Resolve or create organization_id
+      let organizationId = user.user_metadata?.organization_id;
+
+      if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000000') {
+        console.log('[CreateProject] No valid organization_id in metadata. Checking database...');
+        
+        // Try to find any existing organization
+        const { data: orgs, error: orgError } = await supabase
+          .from('organizations')
+          .select('id')
+          .limit(1);
+
+        if (orgError) {
+          console.error('[CreateProject] Error checking organizations:', orgError);
+        }
+
+        if (orgs && orgs.length > 0) {
+          organizationId = orgs[0].id;
+          console.log('[CreateProject] Found existing organization:', organizationId);
+        } else {
+          // Create a default organization if none exists
+          console.log('[CreateProject] No organizations found. Creating default...');
+          const { data: newOrg, error: createOrgError } = await supabase
+            .from('organizations')
+            .insert([{ 
+              name: 'Personal Studio',
+              slug: `studio-${user.id.slice(0, 8)}`, // Unique, URL-safe slug
+              created_by: user.id                    // Required FK
+            }])
+            .select()
+            .single();
+
+          if (createOrgError) {
+            console.error('[CreateProject] Failed to create default organization:', createOrgError);
+            throw new Error(`Failed to create organization: ${createOrgError.message}`);
+          }
+
+          organizationId = newOrg.id;
+          console.log('[CreateProject] Created new default organization:', organizationId);
+
+          // Auto-add user as organization owner
+          const { error: memberError } = await supabase
+            .from('organization_members')
+            .insert([{
+              organization_id: organizationId,
+              user_id: user.id,
+              role: 'owner',
+              joined_at: new Date().toISOString()
+            }]);
+
+          if (memberError) {
+            console.error('[CreateProject] Failed to add user as org owner:', memberError);
+            // We proceed anyway as the org exists, but this is a warning sign
+          }
+          
+          // Proactively update user metadata so future projects use this ID
+          await supabase.auth.updateUser({
+            data: { organization_id: organizationId }
+          });
+        }
+      }
+      
+      console.log('[CreateProject] Using Organization ID:', organizationId);
+
       // Prepare project data
       const projectData = {
         ...newProject,
         created_by: user.id,
-        // Using a valid-looking UUID placeholder if none exists
-        organization_id: user.user_metadata?.organization_id || '00000000-0000-0000-0000-000000000000',
+        organization_id: organizationId,
         cover_image_url: null,
       };
 
@@ -91,6 +154,45 @@ export function useCreateProject() {
     },
     onSuccess: (data) => {
       console.log('[CreateProject] Mutation successful:', data);
+      queryClient.invalidateQueries({ queryKey: ['projects'] });
+    },
+  });
+}
+
+export function useDeleteProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (projectId: string) => {
+      console.log('[DeleteProject] Attempting delete for ID:', projectId);
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) {
+        console.error('[DeleteProject Error]', error);
+        throw error;
+      }
+      return projectId;
+    },
+    onMutate: async (projectId) => {
+      await queryClient.cancelQueries({ queryKey: ['projects'] });
+      const previousProjects = queryClient.getQueryData(['projects']);
+      
+      // Optimistic update
+      queryClient.setQueryData(['projects'], (old: Project[] | undefined) => {
+        return old?.filter(p => p.id !== projectId);
+      });
+
+      return { previousProjects };
+    },
+    onError: (err, projectId, context) => {
+      console.error('[DeleteProject] Mutation failed, rolling back:', err);
+      queryClient.setQueryData(['projects'], context?.previousProjects);
+    },
+    onSuccess: () => {
+      console.log('[DeleteProject] Mutation successful');
       queryClient.invalidateQueries({ queryKey: ['projects'] });
     },
   });

@@ -23,8 +23,6 @@ export default function ProjectsPage() {
   }).length || 0;
   const utilization = projects && projects.length > 0 ? 78 : 0; // Mock utilization logic
 
-  const hasAnyProjects = projects && projects.length > 0;
-  const hasFilterResults = projects && projects.length > 0; // In case we filter to zero
 
   return (
     <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10 animate-in fade-in duration-700">

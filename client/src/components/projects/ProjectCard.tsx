@@ -2,8 +2,13 @@ import { Project } from '../../types/project';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Calendar as CalendarIcon, Clock, Users } from 'lucide-react';
+import { Calendar as CalendarIcon, Clock, Users, Trash2 } from 'lucide-react';
 import { formatDistanceToNow, isBefore, differenceInDays } from 'date-fns';
+import { useDeleteProject } from '../../hooks/use-projects';
+import { Button } from '../ui/button';
+import { useState } from 'react';
+import { TeamDialog } from './TeamDialog';
+import { useProjectMembers } from '../../hooks/use-members';
 
 interface ProjectCardProps {
   project: Project;
@@ -19,18 +24,21 @@ const statusColors: Record<string, string> = {
 const phaseLabel: Record<string, string> = {
   schematic: 'Schematic Design',
   design_dev: 'Design Development',
-  construction_docs: 'Construction Documents',
+  construction: 'Construction',
   closeout: 'Project Closeout',
 };
 
 const phaseColors: Record<string, string> = {
   schematic: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
   design_dev: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  construction_docs: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
+  construction: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
   closeout: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
 };
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  const [teamDialogOpen, setTeamDialogOpen] = useState(false);
+  const deleteMutation = useDeleteProject();
+  const { data: members = [] } = useProjectMembers(project.id);
   const deadlineDate = project.deadline ? new Date(project.deadline) : null;
   const isOverdue = deadlineDate && isBefore(deadlineDate, new Date()) && project.status !== 'completed';
   const daysLeft = deadlineDate ? differenceInDays(deadlineDate, new Date()) : null;
@@ -41,20 +49,29 @@ export function ProjectCard({ project }: ProjectCardProps) {
     return 'text-[var(--text-tertiary)]';
   };
 
-  // Mock members for now
-  const members = [
-    { name: 'John Doe', image: null },
-    { name: 'Alice Smith', image: null },
-    { name: 'Bob Johnson', image: null },
-    { name: 'Sarah Wilson', image: null },
-    { name: 'Mike Brown', image: null },
-  ];
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (confirm(`Are you sure you want to delete "${project.name}"? This action cannot be undone.`)) {
+      deleteMutation.mutate(project.id);
+    }
+  };
+
   const maxAvatars = 4;
-  const displayedMembers = members.slice(0, maxAvatars);
-  const remainingCount = members.length - maxAvatars;
+  const displayedMembers = (members || []).slice(0, maxAvatars);
+  const remainingCount = Math.max(0, (members || []).length - maxAvatars);
 
   return (
-    <Card className="group overflow-hidden bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full border-t-2 border-t-transparent hover:border-t-[var(--accent)]">
+    <Card className="group overflow-hidden bg-[var(--bg-surface)] border-[var(--border-subtle)] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col h-full border-t-2 border-t-transparent hover:border-t-[var(--accent)] relative">
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={handleDelete}
+        disabled={deleteMutation.isPending}
+        className="absolute top-3 right-3 z-10 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white/70 hover:text-white hover:bg-red-500/80 transition-all opacity-0 group-hover:opacity-100"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+
       {/* Cover Image */}
       <div className="aspect-[16/9] w-full relative bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-800 dark:to-slate-950 overflow-hidden">
         {project.cover_image_url ? (
@@ -116,10 +133,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
       <CardFooter className="px-5 py-4 flex items-center justify-between border-t border-[var(--border-subtle)] bg-[var(--bg-raised)]/50">
         <div className="flex -space-x-2">
           {displayedMembers.map((member, i) => (
-            <Avatar key={i} className="w-7 h-7 border-2 border-[var(--bg-surface)] shadow-sm">
-              <AvatarImage src={member.image || ''} />
+            <Avatar key={member.user_id || i} className="w-7 h-7 border-2 border-[var(--bg-surface)] shadow-sm">
+              <AvatarImage src={member.profile?.avatar_url || ''} />
               <AvatarFallback className="text-[9px] font-bold bg-slate-100 text-slate-600">
-                {member.name.split(' ').map(n => n[0]).join('')}
+                {(member.profile?.full_name || 'U').split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
           ))}
@@ -130,11 +147,22 @@ export function ProjectCard({ project }: ProjectCardProps) {
           )}
         </div>
         
-        <div className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] cursor-pointer hover:underline">
+        <div 
+          className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] cursor-pointer hover:underline"
+          onClick={() => setTeamDialogOpen(true)}
+        >
           <Users className="w-3.5 h-3.5" />
           <span>Team</span>
         </div>
       </CardFooter>
+
+      <TeamDialog 
+        projectId={project.id}
+        projectName={project.name}
+        createdBy={project.created_by}
+        open={teamDialogOpen}
+        onOpenChange={setTeamDialogOpen}
+      />
     </Card>
   );
 }

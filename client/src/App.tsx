@@ -9,6 +9,7 @@ import TasksPage from './pages/TasksPage';
 import NotificationsPage from './pages/NotificationsPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
+import ProjectFilesPage from './pages/ProjectFilesPage';
 
 function App() {
   const { user, loading } = useAuth();
@@ -37,6 +38,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/projects/:id" element={<ProjectDetailPage />} />
+          <Route path="/projects/:id/files" element={<ProjectFilesPage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
         </Route>

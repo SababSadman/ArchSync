@@ -4,11 +4,12 @@ import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../components/ui/card';
-import { UserPlus, Mail, Lock, Loader2, ArrowRight, User } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, User, Eye, EyeOff } from 'lucide-react';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -20,25 +21,46 @@ export default function SignupPage() {
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
             full_name: fullName,
-            organization_id: '00000000-0000-0000-0000-000000000000', // Default org
           }
         }
       });
 
       if (error) throw error;
       
-      alert('Signup successful! Please check your email for confirmation (or you can login directly if confirm email is disabled).');
-      navigate('/login');
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign up');
+      if (data.session) {
+        // Auto-login successful (email confirm disabled)
+        navigate('/dashboard');
+      } else {
+        // Email confirm might still be required or just redirecting to login
+        alert('Signup successful! You can now log in with your credentials.');
+        navigate('/login');
+      }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign up';
+      setError(errorMessage);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (error) throw error;
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Google login failed';
+      setError(errorMessage);
     }
   };
 
@@ -89,13 +111,13 @@ export default function SignupPage() {
               
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-[var(--text-tertiary)] ml-1">
-                  Studio Email
+                  Email
                 </label>
                 <div className="relative group">
                   <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)] group-focus-within:text-[var(--accent)] transition-colors" />
                   <Input
                     type="email"
-                    placeholder="name@studio.com"
+                    placeholder="name@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -111,13 +133,20 @@ export default function SignupPage() {
                 <div className="relative group">
                   <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)] group-focus-within:text-[var(--accent)] transition-colors" />
                   <Input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder="••••••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="pl-11 h-12 bg-transparent border-[var(--border-default)] focus-visible:ring-[var(--accent)] transition-all rounded-xl"
+                    className="pl-11 pr-11 h-12 bg-transparent border-[var(--border-default)] focus-visible:ring-[var(--accent)] transition-all rounded-xl"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
                 <p className="text-[10px] text-[var(--text-tertiary)] font-bold px-1 py-1">
                   Minimum 8 characters with numbers & symbols.

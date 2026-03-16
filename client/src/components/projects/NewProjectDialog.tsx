@@ -19,7 +19,7 @@ interface NewProjectDialogProps {
 const phases: { value: ProjectPhase; label: string; desc: string }[] = [
   { value: 'schematic', label: 'Schematic', desc: 'Concept development and site analysis' },
   { value: 'design_dev', label: 'Design Dev', desc: 'Refining details and materials' },
-  { value: 'construction_docs', label: 'Construction Docs', desc: 'Permit and construction blueprints' },
+  { value: 'construction', label: 'Construction', desc: 'Permit and construction blueprints' },
   { value: 'closeout', label: 'Closeout', desc: 'Project completion and handover' },
 ];
 
@@ -34,12 +34,16 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!deadline) {
+      alert('Please set a deadline before launching the project.');
+      return;
+    }
     createMutation.mutate({
       name,
       description,
       phase,
       project_type: projectType,
-      deadline: deadline?.toISOString() || undefined,
+      deadline: deadline.toISOString(),
       status: 'active',
     }, {
       onSuccess: () => {
@@ -139,12 +143,12 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "w-full justify-start text-left font-medium bg-[var(--bg-surface)] border-[var(--border-default)] h-11 transition-all hover:border-[var(--accent)]",
-                      !deadline && "text-[var(--text-tertiary)]"
+                      "w-full justify-start text-left font-medium bg-[var(--bg-surface)] border-[var(--border-default)] h-11 transition-all hover:border-[var(--accent)] px-4",
+                      !deadline && "justify-center"
                     )}
                   >
-                    <CalendarIcon className="mr-2 h-4 w-4 text-[var(--accent)]" />
-                    {deadline ? format(deadline, "PPP") : <span>Set Deadline</span>}
+                    <CalendarIcon className={cn("h-5 w-5 text-[var(--accent)]", deadline && "mr-3")} />
+                    {deadline && <span className="text-sm font-bold">{format(deadline, "PPP")}</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 flex flex-col shadow-2xl border-[var(--border-subtle)]" align="start" sideOffset={8}>

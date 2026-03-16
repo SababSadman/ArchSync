@@ -1,5 +1,5 @@
 export type ProjectStatus = 'draft' | 'active' | 'on_hold' | 'completed';
-export type ProjectPhase = 'schematic' | 'design_dev' | 'construction_docs' | 'closeout';
+export type ProjectPhase = 'schematic' | 'design_dev' | 'construction' | 'closeout';
 export type ProjectType = 'residential' | 'commercial' | 'interior' | 'mixed-use';
 
 export interface Project {

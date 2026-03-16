@@ -58,7 +58,7 @@ export function FilterBar({ filters, setFilters, sortBy, setSortBy }: FilterBarP
                 <SelectItem value="all">All Phases</SelectItem>
                 <SelectItem value="schematic">Schematic</SelectItem>
                 <SelectItem value="design_dev">Design Dev</SelectItem>
-                <SelectItem value="construction_docs">Const. Docs</SelectItem>
+                <SelectItem value="construction">Construction</SelectItem>
                 <SelectItem value="closeout">Closeout</SelectItem>
               </SelectContent>
             </Select>

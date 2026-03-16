@@ -35,3 +35,11 @@
 - [x] Invalidate TanStack Query on mutation success
 - [x] Ensure Shadcn UI components are properly integrated
 - [x] Responsive design across all breakpoints
+
+## File Management System
+- [x] Implementation of `useFileUpload` hook with Supabase Storage
+- [x] Multi-file drag & drop zone with progress tracking
+- [x] Automated file versioning (v1+)
+- [x] File grid with phase-based grouping
+- [x] Rich preview modal (Images with zoom, PDF viewer, CAD metadata)
+- [x] Support for .dwg, .rvt, .ifc, .pdf, .png, .jpg and more
