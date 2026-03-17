@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — File Viewer</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.viewer-shell{display:flex;height:100vh;overflow:hidden;}
+.viewer-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.viewer-topbar{height:52px;background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;}
+.viewer-filename{font-size:14px;font-weight:600;color:var(--text-primary);}
+.viewer-ver-badge{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--bg-raised);padding:3px 8px;border-radius:4px;color:var(--text-tertiary);border:1px solid var(--border-default);}
+.viewer-toolbar{height:44px;background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;padding:0 14px;gap:4px;flex-shrink:0;}
+.tool-btn{width:32px;height:32px;border:none;background:transparent;border-radius:6px;cursor:pointer;font-size:14px;color:var(--text-secondary);transition:.12s;display:flex;align-items:center;justify-content:center;}
+.tool-btn:hover{background:var(--bg-raised);color:var(--text-primary);}
+.tool-btn.active{background:var(--accent-subtle);color:var(--accent);}
+.tool-sep{width:1px;height:20px;background:var(--border-default);margin:0 4px;}
+.viewer-canvas-area{flex:1;overflow:hidden;position:relative;background:var(--bg-sunken);}
+.viewer-canvas{width:100%;height:100%;position:relative;display:flex;align-items:center;justify-content:center;}
+.drawing-container{width:75%;max-width:600px;background:#F5F0E8;border:1px solid var(--border-default);box-shadow:0 4px 24px rgba(0,0,0,.12);position:relative;aspect-ratio:1.4;}
+.fp-bg{width:100%;height:100%;position:relative;overflow:hidden;}
+/* floor plan lines */
+.fp-line{position:absolute;background:#2A2520;}
+.fp-room-label{position:absolute;font-family:'JetBrains Mono',monospace;font-size:9px;color:#6B5E52;}
+/* comment pins */
+.cpin{position:absolute;width:24px;height:24px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2);transition:.15s;z-index:10;}
+.cpin:hover{transform:rotate(-45deg) scale(1.15);}
+.cpin-inner{transform:rotate(45deg);display:flex;align-items:center;justify-content:center;width:100%;height:100%;font-size:9px;font-weight:700;color:#fff;}
+.cpin-popup{position:absolute;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:10px 12px;width:200px;box-shadow:0 8px 24px rgba(0,0,0,.12);z-index:20;transform:rotate(45deg);}
+.cpin-popup-author{font-size:11px;font-weight:600;color:var(--text-primary);margin-bottom:3px;}
+.cpin-popup-text{font-size:11px;color:var(--text-secondary);line-height:1.5;}
+.cpin-popup-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);margin-top:4px;}
+/* zoom controls */
+.zoom-controls{position:absolute;bottom:16px;right:16px;display:flex;flex-direction:column;gap:4px;}
+.zoom-btn{width:32px;height:32px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);box-shadow:0 2px 6px rgba(0,0,0,.08);}
+.zoom-btn:hover{background:var(--bg-raised);}
+.presence-banner{position:absolute;top:12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:12px;padding:6px 14px;border-radius:20px;display:flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(31,111,235,.3);z-index:30;}
+.presence-banner button{background:transparent;border:none;color:rgba(255,255,255,.7);cursor:pointer;padding:0;margin-left:4px;font-size:12px;}
+
+/* RIGHT PANEL */
+.viewer-right{width:300px;flex-shrink:0;background:var(--bg-surface);border-left:1px solid var(--border-subtle);display:flex;flex-direction:column;overflow:hidden;}
+.vr-tabs{display:flex;border-bottom:1px solid var(--border-default);}
+.vr-tab{flex:1;height:40px;border:none;background:transparent;cursor:pointer;font-size:12px;font-weight:500;color:var(--text-tertiary);border-bottom:2px solid transparent;margin-bottom:-1px;transition:.12s;}
+.vr-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.vr-body{flex:1;overflow-y:auto;padding:14px;}
+
+/* COMMENTS */
+.comment-item{padding:10px 0;border-bottom:1px solid var(--border-subtle);}
+.comment-item:last-child{border-bottom:none;}
+.comment-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.comment-avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#fff;flex-shrink:0;}
+.comment-author{font-size:12px;font-weight:600;color:var(--text-primary);}
+.comment-time{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);margin-left:auto;}
+.comment-text{font-size:12px;color:var(--text-secondary);line-height:1.55;padding-left:30px;}
+.comment-coords{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);padding-left:30px;margin-top:2px;}
+.comment-actions{padding-left:30px;margin-top:6px;display:flex;gap:8px;}
+.comment-action-btn{font-size:11px;color:var(--text-tertiary);cursor:pointer;border:none;background:transparent;padding:0;}
+.comment-action-btn:hover{color:var(--accent);}
+.comment-status{font-size:9px;padding:1px 6px;border-radius:3px;margin-left:auto;}
+.status-open{background:var(--orange-bg);color:var(--orange);}
+.status-resolved{background:var(--green-bg);color:var(--green);}
+.new-comment-box{margin-top:12px;}
+.new-comment-hint{font-size:11px;color:var(--text-tertiary);margin-bottom:8px;}
+.new-comment-input{width:100%;height:70px;background:var(--bg-sunken);border:1px solid var(--border-default);border-radius:7px;padding:8px 10px;font-size:12px;font-family:'DM Sans',sans-serif;resize:none;outline:none;}
+.new-comment-input:focus{border-color:var(--accent);}
+
+/* VERSION HISTORY */
+.ver-item{padding:10px 0;border-bottom:1px solid var(--border-subtle);cursor:pointer;}
+.ver-item:hover{background:var(--bg-raised);margin:0 -14px;padding:10px 14px;}
+.ver-item:last-child{border-bottom:none;}
+.ver-header{display:flex;align-items:center;gap:8px;margin-bottom:4px;}
+.ver-num{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;background:var(--bg-raised);padding:2px 7px;border-radius:3px;color:var(--text-primary);}
+.ver-num.current{background:var(--accent-subtle);color:var(--accent);}
+.ver-date{font-size:11px;color:var(--text-secondary);}
+.ver-release{font-size:10px;color:var(--green);}
+.ver-uploader{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-tertiary);}
+.ver-changelog{font-size:11px;color:var(--text-secondary);line-height:1.5;margin-top:4px;padding:6px 8px;background:var(--bg-raised);border-radius:5px;}
+.ver-actions{display:flex;gap:6px;margin-top:8px;}
+
+/* BOTTOM FILMSTRIP */
+.viewer-bottom{height:70px;background:var(--bg-surface);border-top:1px solid var(--border-subtle);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0;overflow-x:auto;}
+.filmstrip-item{width:50px;height:50px;border-radius:5px;border:1.5px solid var(--border-default);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:var(--bg-raised);transition:.12s;}
+.filmstrip-item:hover,.filmstrip-item.active{border-color:var(--accent);}
+.filmstrip-item.active{box-shadow:0 0 0 2px var(--accent-subtle);}
+</style>
+</head>
+<body>
+<div class="viewer-shell">
+  <!-- LEFT SIDEBAR (collapsed in viewer) -->
+  <aside class="sidebar" style="width:52px;overflow:hidden;">
+    <div class="sidebar-logo" style="padding:12px;justify-content:center;"><div class="sidebar-logo-mark">A</div></div>
+    <a href="dashboard.html" class="sidebar-item" style="justify-content:center;padding:8px;margin:2px 4px;" title="Dashboard"><span>🏠</span></a>
+    <a href="project.html" class="sidebar-item active" style="justify-content:center;padding:8px;margin:2px 4px;" title="Files"><span>📁</span></a>
+    <a href="tasks.html" class="sidebar-item" style="justify-content:center;padding:8px;margin:2px 4px;" title="Tasks"><span>✅</span></a>
+    <a href="notifications.html" class="sidebar-item" style="justify-content:center;padding:8px;margin:2px 4px;" title="Notifications"><span>🔔</span></a>
+  </aside>
+
+  <div class="viewer-main">
+    <!-- TOPBAR -->
+    <div class="viewer-topbar">
+      <a href="project.html" style="color:var(--text-tertiary);text-decoration:none;font-size:13px;">← Riverside Tower</a>
+      <span style="color:var(--border-default);">|</span>
+      <span class="viewer-filename">Level-03-Floor-Plan.dwg</span>
+      <span class="viewer-ver-badge">v4 — current</span>
+      <span class="badge badge-blue">Design Dev</span>
+      <div style="flex:1;"></div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div class="presence-stack">
+          <div class="presence-avatar" style="background:#D97706;width:26px;height:26px;font-size:9px;" title="Marco Rivera">MR</div>
+        </div>
+        <button class="btn btn-secondary btn-sm">↓ Download</button>
+        <button class="btn btn-secondary btn-sm">🔗 Share</button>
+        <button class="btn btn-primary btn-sm" onclick="document.getElementById('compare-modal').style.display='flex'">⇔ Compare</button>
+      </div>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="viewer-toolbar">
+      <button class="tool-btn active" title="Select / Pan">✋</button>
+      <button class="tool-btn" title="Comment Pin" onclick="this.classList.toggle('active')">📍</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" title="Arrow markup">↗</button>
+      <button class="tool-btn" title="Circle markup">⭕</button>
+      <button class="tool-btn" title="Text markup">T</button>
+      <div class="tool-sep"></div>
+      <button class="tool-btn" title="Zoom in" onclick="zoom(1.2)">🔍+</button>
+      <button class="tool-btn" title="Zoom out" onclick="zoom(0.8)">🔍-</button>
+      <button class="tool-btn" title="Fit to screen" onclick="resetZoom()">⊡</button>
+      <div class="tool-sep"></div>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-tertiary);" id="zoom-label">100%</span>
+      <div style="flex:1;"></div>
+      <span style="font-size:11px;color:var(--text-tertiary);">3 pins · 2 open · 1 resolved</span>
+    </div>
+
+    <!-- CANVAS -->
+    <div class="viewer-canvas-area">
+      <div class="viewer-canvas">
+        <div class="presence-banner" id="presence-banner">
+          <div style="width:8px;height:8px;border-radius:50%;background:#A5F3FC;"></div>
+          <span>Marco Rivera is also viewing this file</span>
+          <button onclick="document.getElementById('presence-banner').style.display='none'">×</button>
+        </div>
+        <div class="drawing-container" id="drawing" style="cursor:crosshair;">
+          <div class="fp-bg">
+            <!-- outer walls -->
+            <div class="fp-line" style="top:8%;left:8%;width:84%;height:2px;"></div>
+            <div class="fp-line" style="top:8%;left:8%;width:2px;height:84%;"></div>
+            <div class="fp-line" style="top:8%;right:8%;width:2px;height:84%;"></div>
+            <div class="fp-line" style="bottom:8%;left:8%;width:84%;height:2px;"></div>
+            <!-- interior walls -->
+            <div class="fp-line" style="top:8%;left:50%;width:2px;height:42%;"></div>
+            <div class="fp-line" style="top:50%;left:8%;width:56%;height:2px;"></div>
+            <div class="fp-line" style="top:50%;left:50%;width:2px;height:42%;"></div>
+            <div class="fp-line" style="top:72%;left:8%;width:27%;height:2px;"></div>
+            <!-- room labels -->
+            <div class="fp-room-label" style="top:22%;left:12%;">LIVING ROOM</div>
+            <div class="fp-room-label" style="top:22%;left:55%;">MASTER BEDROOM</div>
+            <div class="fp-room-label" style="top:60%;left:18%;">STUDY</div>
+            <div class="fp-room-label" style="top:60%;left:55%;">BEDROOM 2</div>
+            <div class="fp-room-label" style="top:80%;left:12%;">BATH</div>
+            <!-- dimensions -->
+            <div style="position:absolute;bottom:4%;left:50%;transform:translateX(-50%);font-family:'JetBrains Mono',monospace;font-size:8px;color:#8B7355;">← 12,400 →</div>
+          </div>
+          <!-- comment pins -->
+          <div class="cpin" style="background:#1F6FEB;top:28%;left:24%;" onclick="showComment(this,'p1')"><div class="cpin-inner">3</div></div>
+          <div class="cpin" style="background:#D97706;top:18%;left:54%;" onclick="showComment(this,'p2')"><div class="cpin-inner">1</div></div>
+          <div class="cpin" style="background:#16A34A;top:62%;left:44%;" onclick="showComment(this,'p3')" title="Resolved"><div class="cpin-inner">✓</div></div>
+          <!-- popups (hidden by default) -->
+          <div id="popup-p1" style="display:none;position:absolute;top:28%;left:30%;z-index:50;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:9px;padding:12px;width:200px;box-shadow:0 8px 24px rgba(0,0,0,.12);">
+            <div style="font-size:11px;font-weight:600;margin-bottom:4px;">Marco Rivera</div>
+            <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">Window mullion spacing needs to be revised per the structural engineer's latest comments.</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);margin-top:5px;">Pin (24.3%, 28.1%) · 4h ago</div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><button class="btn btn-secondary btn-sm" style="font-size:10px;height:24px;padding:0 8px;">Reply</button><button class="btn btn-ghost btn-sm" style="font-size:10px;height:24px;padding:0 8px;" onclick="document.getElementById('popup-p1').style.display='none'">Close</button></div>
+          </div>
+          <div id="popup-p2" style="display:none;position:absolute;top:18%;left:60%;z-index:50;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:9px;padding:12px;width:200px;box-shadow:0 8px 24px rgba(0,0,0,.12);">
+            <div style="font-size:11px;font-weight:600;margin-bottom:4px;">Ana Kim</div>
+            <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">Client requested the master bedroom window to be enlarged. Increase by 600mm.</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);margin-top:5px;">Pin (54.1%, 18.4%) · 1d ago</div>
+            <div style="display:flex;gap:6px;margin-top:8px;"><button class="btn btn-secondary btn-sm" style="font-size:10px;height:24px;padding:0 8px;">Reply</button><button class="btn btn-ghost btn-sm" style="font-size:10px;height:24px;padding:0 8px;" onclick="document.getElementById('popup-p2').style.display='none'">Close</button></div>
+          </div>
+          <!-- zoom controls -->
+          <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoom(1.2)">+</button>
+            <button class="zoom-btn" onclick="resetZoom()">⊡</button>
+            <button class="zoom-btn" onclick="zoom(0.8)">−</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FILMSTRIP -->
+    <div class="viewer-bottom">
+      <span style="font-size:11px;color:var(--text-tertiary);white-space:nowrap;margin-right:4px;">Files:</span>
+      <div class="filmstrip-item active">📄</div>
+      <div class="filmstrip-item">📐</div>
+      <div class="filmstrip-item">📄</div>
+      <div class="filmstrip-item">🖼️</div>
+      <div class="filmstrip-item">📋</div>
+      <div class="filmstrip-item">📐</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="viewer-right">
+    <div class="vr-tabs">
+      <button class="vr-tab active" onclick="switchVrTab('comments',this)">Comments (3)</button>
+      <button class="vr-tab" onclick="switchVrTab('versions',this)">Versions</button>
+    </div>
+
+    <!-- COMMENTS -->
+    <div id="vr-comments" class="vr-body">
+      <div class="comment-item">
+        <div class="comment-header"><div class="comment-avatar" style="background:#D97706;">MR</div><div class="comment-author">Marco Rivera</div><span class="comment-status status-open">open</span><span class="comment-time">4h</span></div>
+        <div class="comment-text">Window mullion spacing needs to be revised per structural engineer's latest comments on the south face.</div>
+        <div class="comment-coords">Pin 1 · (24.3%, 28.1%)</div>
+        <div class="comment-actions"><button class="comment-action-btn">Reply</button><button class="comment-action-btn">Resolve</button><button class="comment-action-btn">Create task</button></div>
+      </div>
+      <div class="comment-item">
+        <div class="comment-header"><div class="comment-avatar" style="background:#1F6FEB;">AK</div><div class="comment-author">Ana Kim</div><span class="comment-status status-open">open</span><span class="comment-time">1d</span></div>
+        <div class="comment-text">Client requested the master bedroom window enlarged by 600mm. Please update and re-issue for client review.</div>
+        <div class="comment-coords">Pin 2 · (54.1%, 18.4%)</div>
+        <div class="comment-actions"><button class="comment-action-btn">Reply</button><button class="comment-action-btn">Resolve</button><button class="comment-action-btn">Create task</button></div>
+      </div>
+      <div class="comment-item" style="opacity:.6;">
+        <div class="comment-header"><div class="comment-avatar" style="background:#16A34A;">JL</div><div class="comment-author">Julia Lee</div><span class="comment-status status-resolved">resolved</span><span class="comment-time">3d</span></div>
+        <div class="comment-text">Bathroom dimension confirmed with plumber — OK to proceed.</div>
+        <div class="comment-coords">Pin 3 · (44.0%, 62.3%)</div>
+      </div>
+      <div class="new-comment-box">
+        <div class="new-comment-hint">💡 Click on the drawing to pin a comment, then type below</div>
+        <textarea class="new-comment-input" placeholder="Add a comment or @mention a team member..."></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:6px;"><button class="btn btn-primary btn-sm">Post Comment</button></div>
+      </div>
+    </div>
+
+    <!-- VERSIONS -->
+    <div id="vr-versions" class="vr-body" style="display:none;">
+      <div class="ver-item">
+        <div class="ver-header"><span class="ver-num current">v4 — Current</span><span class="ver-date">Mar 17, 2026</span></div>
+        <div class="ver-uploader"><div class="comment-avatar" style="background:#1F6FEB;width:18px;height:18px;font-size:8px;">AK</div> Ana Kim</div>
+        <div class="ver-changelog">Living room +12m², bathroom relocated north wall, new utility room 6m², structural column moved 400mm east.</div>
+        <div class="ver-actions"><button class="btn btn-secondary btn-sm">↓ Download</button><button class="btn btn-ghost btn-sm" onclick="document.getElementById('compare-modal').style.display='flex'">⇔ Compare</button></div>
+      </div>
+      <div class="ver-item">
+        <div class="ver-header"><span class="ver-num">v3</span><span class="ver-date">Mar 14, 2026</span></div>
+        <div class="ver-uploader"><div class="comment-avatar" style="background:#D97706;width:18px;height:18px;font-size:8px;">MR</div> Marco Rivera</div>
+        <div class="ver-changelog">Kitchen reconfigured per client request — island removed. Hallway widened to 1,200mm.</div>
+        <div class="ver-actions"><button class="btn btn-secondary btn-sm">↓ Download</button><button class="btn btn-ghost btn-sm">⇔ Compare</button><button class="btn btn-ghost btn-sm">↩ Restore</button></div>
+      </div>
+      <div class="ver-item">
+        <div class="ver-header"><span class="ver-num">v2</span><span class="ver-date">Mar 8, 2026</span><span class="ver-release">★ "Schematic Issue"</span></div>
+        <div class="ver-uploader"><div class="comment-avatar" style="background:#1F6FEB;width:18px;height:18px;font-size:8px;">AK</div> Ana Kim · Named Release</div>
+        <div class="ver-changelog">Post-schematic update with structural grid resolved. Approved by client Mar 10.</div>
+        <div class="ver-actions"><button class="btn btn-secondary btn-sm">↓ Download</button><button class="btn btn-ghost btn-sm">⇔ Compare</button><button class="btn btn-ghost btn-sm">↩ Restore</button></div>
+      </div>
+      <div class="ver-item">
+        <div class="ver-header"><span class="ver-num">v1</span><span class="ver-date">Feb 22, 2026</span></div>
+        <div class="ver-uploader"><div class="comment-avatar" style="background:#1F6FEB;width:18px;height:18px;font-size:8px;">AK</div> Ana Kim · Initial upload</div>
+        <div class="ver-actions"><button class="btn btn-secondary btn-sm">↓ Download</button><button class="btn btn-ghost btn-sm">⇔ Compare</button><button class="btn btn-ghost btn-sm">↩ Restore</button></div>
+      </div>
+      <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border-subtle);">
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="document.getElementById('pin-release-modal').style.display='flex'">★ Pin Named Release</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARE MODAL -->
+<div id="compare-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:680px;width:95%;">
+    <h2 class="modal-title">Compare Versions</h2>
+    <p class="modal-desc">Drag the divider to compare any two versions side by side.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <div><label class="form-label">Left version</label><select class="form-input form-select"><option>v3 — Mar 14, 2026</option><option>v2 — Mar 8</option><option>v1 — Feb 22</option></select></div>
+      <div><label class="form-label">Right version</label><select class="form-input form-select"><option selected>v4 — Current</option><option>v3</option><option>v2</option></select></div>
+    </div>
+    <div style="background:var(--bg-raised);border-radius:8px;height:280px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;">
+      <div style="position:absolute;left:0;top:0;width:50%;height:100%;background:linear-gradient(135deg,#EDF0F5,#D9DDE8);display:flex;align-items:center;justify-content:center;"><span style="font-size:12px;color:var(--text-tertiary);">v3</span></div>
+      <div style="position:absolute;right:0;top:0;width:50%;height:100%;background:linear-gradient(135deg,#EEF4FF,#DBEAFE);display:flex;align-items:center;justify-content:center;"><span style="font-size:12px;color:var(--accent);">v4 — current</span></div>
+      <div style="position:absolute;left:50%;top:0;width:3px;height:100%;background:var(--accent);cursor:col-resize;z-index:10;"></div>
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;cursor:col-resize;z-index:11;">⇔</div>
+    </div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="document.getElementById('compare-modal').style.display='none'">Close</button></div>
+  </div>
+</div>
+
+<!-- PIN RELEASE MODAL -->
+<div id="pin-release-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h2 class="modal-title">Pin Named Release</h2>
+    <p class="modal-desc">Give this version a milestone name. It will be bookmarked in version history and can be used in client presentations.</p>
+    <div class="form-group"><label class="form-label">Release name</label><input class="form-input" placeholder="e.g. DD Issue 1 — For Client Review"></div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+      <button class="btn btn-ghost btn-sm" onclick="document.querySelector('#pin-release-modal input').value='Schematic Design v1 — Issued for Review'">Schematic v1</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.querySelector('#pin-release-modal input').value='Design Development — For Client Review'">DD for Review</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.querySelector('#pin-release-modal input').value='Construction Docs — Permit Set'">CD Permit Set</button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('pin-release-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary">Pin Release ★</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let zoomLevel = 1;
+function zoom(f){zoomLevel*=f;zoomLevel=Math.max(.3,Math.min(3,zoomLevel));document.getElementById('drawing').style.transform=`scale(${zoomLevel})`;document.getElementById('zoom-label').textContent=Math.round(zoomLevel*100)+'%';}
+function resetZoom(){zoomLevel=1;document.getElementById('drawing').style.transform='scale(1)';document.getElementById('zoom-label').textContent='100%';}
+function switchVrTab(name,el){document.getElementById('vr-comments').style.display='none';document.getElementById('vr-versions').style.display='none';document.getElementById('vr-'+name).style.display='block';document.querySelectorAll('.vr-tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');}
+function showComment(el,id){document.querySelectorAll('[id^=popup-]').forEach(p=>p.style.display='none');const p=document.getElementById('popup-'+id);if(p)p.style.display='block';}
+document.addEventListener('click',e=>{if(!e.target.closest('.cpin')&&!e.target.closest('[id^=popup-]')){document.querySelectorAll('[id^=popup-]').forEach(p=>p.style.display='none');}});
+</script>
+</body></html>

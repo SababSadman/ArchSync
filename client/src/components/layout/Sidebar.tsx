@@ -12,6 +12,9 @@ import { supabase } from '../../lib/supabase';
 import { useProjects } from '../../hooks/use-projects';
 import { useAuth } from '../../hooks/use-auth';
 import { useProjectModal } from '../../store/use-project-modal';
+import { useState } from 'react';
+import { useProjectFiles } from '../../hooks/use-project-files';
+import { FileIcon, ImageIcon, VideoIcon, FileJson } from 'lucide-react';
 
 const mainNav = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -27,13 +30,14 @@ const statusColors: Record<string, string> = {
   completed: '#3b82f6',
 };
 
-export function Sidebar() {
+export function Sidebar({ onOpenSettings }: { onOpenSettings?: () => void }) {
   const location = useLocation();
   const { user } = useAuth();
   const { openModal } = useProjectModal();
   const { data: projects, isLoading } = useProjects();
   
   const sidebarProjects = projects?.slice(0, 5) || [];
+  const recentFiles = projects?.slice(0, 3).map(p => ({ id: p.id, name: p.name, type: 'project' })) || [];
 
   return (
     <div className="hidden md:flex flex-col w-[232px] h-full bg-[var(--bg-surface)] border-r border-[var(--border-subtle)] shrink-0">
@@ -127,6 +131,27 @@ export function Sidebar() {
             )}
           </div>
         </div>
+
+        {/* Recent Section */}
+        <div>
+          <div className="text-[9px] font-mono uppercase tracking-widest text-[var(--text-tertiary)] px-4 mb-2">
+            RECENT ACTIVITY
+          </div>
+          <div className="px-2 flex flex-col gap-0.5">
+            {recentFiles.map((file) => (
+              <Link
+                key={file.id}
+                to={`/projects/${file.id}/files`}
+                className="flex items-center w-full h-[32px] px-2 rounded-lg text-[12px] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors group"
+              >
+                <div className="w-[14px] h-[14px] mr-2 text-[var(--text-tertiary)] group-hover:text-[var(--accent)] transition-colors">
+                  <FileIcon className="w-full h-full" />
+                </div>
+                <span className="truncate flex-1">{file.name} Assets</span>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Bottom User Row */}
@@ -143,7 +168,10 @@ export function Sidebar() {
           </span>
         </div>
         <div className="flex items-center gap-1">
-          <button className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors shrink-0">
+          <button 
+            onClick={onOpenSettings}
+            className="w-6 h-6 rounded-md flex items-center justify-center text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-colors shrink-0 outline-none"
+          >
             <Settings className="w-4 h-4" />
           </button>
           <button 

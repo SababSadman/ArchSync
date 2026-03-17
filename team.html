@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — Team</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.member-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:20px;transition:.2s;}
+.member-card:hover{border-color:var(--border-strong);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.member-avatar-lg{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:600;color:#fff;flex-shrink:0;}
+.member-name{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:2px;}
+.member-email{font-size:12px;color:var(--text-tertiary);margin-bottom:8px;}
+.member-stat{font-size:12px;color:var(--text-secondary);}
+.member-stat strong{font-weight:600;color:var(--text-primary);}
+.online-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.invite-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-subtle);}
+.invite-row:last-child{border-bottom:none;}
+.role-pill{cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-mark">A</div><span class="sidebar-logo-text">Arch<span>Sync</span></span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span> Dashboard</a>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">📁</span> All Projects</a>
+    <a href="tasks.html" class="sidebar-item"><span class="sidebar-item-icon">✅</span> My Tasks</a>
+    <a href="notifications.html" class="sidebar-item"><span class="sidebar-item-icon">🔔</span> Notifications<span class="sidebar-item-badge">3</span></a>
+    <a href="ai.html" class="sidebar-item"><span class="sidebar-item-icon">🤖</span> AI Assistant</a>
+    <div class="sidebar-section">Projects</div>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#1F6FEB;display:inline-block;"></span></span> Riverside Tower</a>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#D97706;display:inline-block;"></span></span> Park Pavilion</a>
+    <div class="sidebar-spacer"></div>
+    <a href="settings.html" class="sidebar-item"><span class="sidebar-item-icon">⚙️</span> Settings</a>
+    <div class="sidebar-user"><div class="sidebar-avatar">AK</div><div class="sidebar-user-info"><div class="sidebar-user-name">Ana Kim</div><div class="sidebar-user-role">Admin · Studio Meridian</div></div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb"><span class="current">Team</span></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="notif-dot"></span></button>
+        <div class="sidebar-avatar" style="width:32px;height:32px;cursor:pointer;">AK</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Studio Meridian — Team</h1>
+          <p class="page-subtitle">6 members · 4 active projects · Studio plan</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" onclick="location.href='settings.html'">⚙️ Studio Settings</button>
+          <button class="btn btn-primary" onclick="document.getElementById('invite-modal').style.display='flex'">+ Invite Member</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <a href="#" class="tab active" onclick="showTeamTab('members',this);return false;">Members</a>
+        <a href="#" class="tab" onclick="showTeamTab('roles',this);return false;">Roles & Permissions</a>
+        <a href="#" class="tab" onclick="showTeamTab('invites',this);return false;">Pending Invites</a>
+      </div>
+
+      <!-- MEMBERS TAB -->
+      <div id="team-members">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:20px;">
+          <div class="search-wrap" style="flex:1;max-width:300px;">
+            <span class="search-icon">🔍</span>
+            <input class="form-input search-input" placeholder="Search team members...">
+          </div>
+          <select class="form-input form-select" style="width:140px;height:36px;font-size:13px;">
+            <option>All roles</option><option>Admin</option><option>Editor</option><option>Viewer</option><option>Client</option>
+          </select>
+        </div>
+
+        <div class="grid-3" style="margin-bottom:28px;">
+          <div class="member-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="position:relative;"><div class="member-avatar-lg" style="background:#1F6FEB;">AK</div><div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:#16A34A;border:2px solid #fff;"></div></div>
+              <div><div class="member-name">Ana Kim</div><div class="member-email">ana@studiomeridian.com</div><span class="badge badge-blue" style="font-size:9px;">Admin</span><span class="badge badge-gray" style="font-size:9px;margin-left:4px;">You</span></div>
+            </div>
+            <div style="display:flex;gap:20px;">
+              <div class="member-stat"><strong>4</strong><br>Projects</div>
+              <div class="member-stat"><strong>23</strong><br>Tasks done</div>
+              <div class="member-stat"><strong>48</strong><br>Files uploaded</div>
+            </div>
+          </div>
+          <div class="member-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="position:relative;"><div class="member-avatar-lg" style="background:#D97706;">MR</div><div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:#16A34A;border:2px solid #fff;"></div></div>
+              <div><div class="member-name">Marco Rivera</div><div class="member-email">marco@studiomeridian.com</div><span class="badge badge-gray" style="font-size:9px;">Editor</span></div>
+            </div>
+            <div style="display:flex;gap:20px;">
+              <div class="member-stat"><strong>3</strong><br>Projects</div>
+              <div class="member-stat"><strong>18</strong><br>Tasks done</div>
+              <div class="member-stat"><strong>31</strong><br>Files uploaded</div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm">Change role</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--red);">Remove</button>
+            </div>
+          </div>
+          <div class="member-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="position:relative;"><div class="member-avatar-lg" style="background:#16A34A;">JL</div><div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:#16A34A;border:2px solid #fff;"></div></div>
+              <div><div class="member-name">Julia Lee</div><div class="member-email">julia@studiomeridian.com</div><span class="badge badge-gray" style="font-size:9px;">Editor</span></div>
+            </div>
+            <div style="display:flex;gap:20px;">
+              <div class="member-stat"><strong>2</strong><br>Projects</div>
+              <div class="member-stat"><strong>14</strong><br>Tasks done</div>
+              <div class="member-stat"><strong>19</strong><br>Files uploaded</div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm">Change role</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--red);">Remove</button>
+            </div>
+          </div>
+          <div class="member-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="position:relative;"><div class="member-avatar-lg" style="background:#7C3AED;">CM</div><div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:#D97706;border:2px solid #fff;"></div></div>
+              <div><div class="member-name">Carlos Méndez</div><div class="member-email">carlos@partnerarch.com</div><span class="badge badge-gray" style="font-size:9px;">Viewer</span></div>
+            </div>
+            <div style="display:flex;gap:20px;">
+              <div class="member-stat"><strong>1</strong><br>Projects</div>
+              <div class="member-stat"><strong>0</strong><br>Tasks done</div>
+              <div class="member-stat"><strong>0</strong><br>Files uploaded</div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm">Change role</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--red);">Remove</button>
+            </div>
+          </div>
+          <div class="member-card">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="position:relative;"><div class="member-avatar-lg" style="background:#0891B2;">MC</div><div style="position:absolute;bottom:0;right:0;width:12px;height:12px;border-radius:50%;background:#A09D98;border:2px solid #fff;"></div></div>
+              <div><div class="member-name">Michael Chen</div><div class="member-email">m.chen@meridian.com</div><span class="badge badge-orange" style="font-size:9px;">Client</span></div>
+            </div>
+            <div style="display:flex;gap:20px;">
+              <div class="member-stat"><strong>1</strong><br>Projects</div>
+              <div class="member-stat"><strong>2</strong><br>Approvals</div>
+              <div class="member-stat">—<br>Files</div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:6px;">
+              <button class="btn btn-secondary btn-sm">View portal</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--red);">Remove</button>
+            </div>
+          </div>
+          <!-- ADD MEMBER CARD -->
+          <div class="member-card" style="border:2px dashed var(--border-default);display:flex;align-items:center;justify-content:center;cursor:pointer;min-height:160px;" onclick="document.getElementById('invite-modal').style.display='flex'">
+            <div style="text-align:center;">
+              <div style="font-size:28px;margin-bottom:8px;opacity:.3;">+</div>
+              <div style="font-size:13px;font-weight:500;color:var(--text-secondary);">Invite a member</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ROLES TAB -->
+      <div id="team-roles" style="display:none;">
+        <div class="card" style="padding:0;max-width:780px;">
+          <table class="table">
+            <thead><tr><th>Permission</th><th>Owner</th><th>Admin</th><th>Editor</th><th>Viewer</th><th>Client</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:500;">Manage billing & plan</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">Invite / remove members</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">Create / delete projects</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">Upload files</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">Restore file versions</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">Add / resolve comments</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">Create / manage tasks</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">View files (internal)</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+              <tr><td style="font-weight:500;">View files (client portal)</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+              <tr><td style="font-weight:500;">Approve (sign off)</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td></tr>
+              <tr><td style="font-weight:500;">Download files</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅ (watermarked)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- INVITES TAB -->
+      <div id="team-invites" style="display:none;">
+        <div class="card" style="max-width:600px;padding:0;">
+          <div style="padding:14px 20px;font-size:12px;color:var(--text-secondary);">1 pending invite</div>
+          <div style="padding:0 20px;">
+            <div class="invite-row">
+              <div class="avatar avatar-md" style="background:var(--bg-sunken);border:2px dashed var(--border-strong);"></div>
+              <div style="flex:1;">
+                <div style="font-size:13px;font-weight:500;color:var(--text-primary);">sarah@consultfirm.com</div>
+                <div style="font-size:11px;color:var(--text-tertiary);">Invited by Ana Kim · Mar 15, 2026 · Expires Mar 22</div>
+              </div>
+              <span class="badge badge-orange">Pending</span>
+              <span class="badge badge-gray">Editor</span>
+              <button class="btn btn-ghost btn-sm" style="color:var(--red);">Revoke</button>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <button class="btn btn-primary" onclick="document.getElementById('invite-modal').style.display='flex'">+ Send New Invite</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- INVITE MODAL -->
+<div id="invite-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h2 class="modal-title">Invite Team Member</h2>
+    <p class="modal-desc">They'll receive an email with a link to join your studio workspace.</p>
+    <div class="form-group"><label class="form-label">Email address</label><input class="form-input" type="email" placeholder="colleague@studio.com"></div>
+    <div class="form-group"><label class="form-label">Role</label>
+      <select class="form-input form-select">
+        <option>Admin — full access, can manage billing and members</option>
+        <option selected>Editor — can upload files and manage tasks</option>
+        <option>Viewer — read-only access to project files</option>
+        <option>Client — access to client portal only</option>
+      </select>
+    </div>
+    <div class="form-group"><label class="form-label">Personal message (optional)</label><textarea class="form-input form-textarea" placeholder="Looking forward to working with you on..."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('invite-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary">Send Invite →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function showTeamTab(name,el){
+  ['members','roles','invites'].forEach(t=>document.getElementById('team-'+t).style.display='none');
+  document.getElementById('team-'+name).style.display='block';
+  document.querySelectorAll('.tabs .tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body></html>

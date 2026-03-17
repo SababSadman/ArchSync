@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — Client Portal</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+/* INTERNAL PORTAL MANAGEMENT */
+.portal-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:20px;margin-bottom:14px;}
+.portal-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.portal-card-title{font-size:14px;font-weight:600;color:var(--text-primary);}
+.portal-card-status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-secondary);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#16A34A;animation:pulse2 2s infinite;}
+@keyframes pulse2{0%,100%{opacity:1;}50%{opacity:.4;}}
+.file-selector{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+.file-selector-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border-default);border-radius:7px;background:var(--bg-surface);cursor:pointer;transition:.12s;}
+.file-selector-item:hover{border-color:var(--border-strong);}
+.file-selector-item.selected{border-color:var(--accent);background:var(--accent-subtle);}
+.file-toggle{width:18px;height:18px;border-radius:4px;border:1.5px solid var(--border-strong);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.file-selector-item.selected .file-toggle{background:var(--accent);border-color:var(--accent);color:#fff;}
+.approval-item{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border-subtle);}
+.approval-item:last-child{border-bottom:none;}
+.approval-cert{display:flex;align-items:center;gap:8px;background:var(--green-bg);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:10px 14px;margin-top:10px;}
+.approval-cert-icon{font-size:20px;}
+.share-link-box{display:flex;align-items:center;gap:8px;background:var(--bg-sunken);border:1px solid var(--border-default);border-radius:8px;padding:10px 14px;}
+.share-link-url{flex:1;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.qr-placeholder{width:64px;height:64px;background:var(--bg-raised);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:28px;border:1px solid var(--border-default);}
+
+/* SIGNATURE PAD */
+.sig-pad{background:var(--bg-base);border:1.5px solid var(--border-default);border-radius:8px;height:80px;display:flex;align-items:center;justify-content:center;cursor:text;font-size:13px;color:var(--text-tertiary);font-style:italic;margin-bottom:10px;}
+.sig-pad.signed{background:var(--bg-surface);border-color:var(--green);font-family:'DM Serif Display',serif;font-size:20px;color:var(--text-primary);font-style:italic;}
+
+/* PUBLIC PORTAL VIEW */
+.public-portal{max-width:680px;margin:0 auto;padding:40px 20px;}
+.pp-brand-bar{display:flex;align-items:center;gap:12px;margin-bottom:32px;padding-bottom:20px;border-bottom:1px solid var(--border-default);}
+.pp-brand-logo{width:36px;height:36px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:16px;color:#fff;}
+.pp-brand-name{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text-primary);}
+.pp-brand-name span{color:var(--accent);}
+.pp-project-title{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text-primary);margin-bottom:6px;}
+.pp-project-sub{font-size:14px;color:var(--text-secondary);margin-bottom:28px;}
+.pp-section-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:10px;}
+.pp-file-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--border-default);border-radius:8px;background:var(--bg-surface);margin-bottom:8px;cursor:pointer;transition:.15s;}
+.pp-file-card:hover{border-color:var(--border-strong);box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.pp-file-icon{font-size:22px;}
+.pp-file-name{font-size:14px;font-weight:600;color:var(--text-primary);flex:1;}
+.pp-file-ver{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-tertiary);}
+.pp-file-dl{font-size:12px;color:var(--accent);cursor:pointer;}
+.pp-sign-box{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:24px;margin-top:24px;}
+.pp-sign-title{font-size:16px;font-weight:600;color:var(--text-primary);margin-bottom:6px;}
+.pp-sign-sub{font-size:13px;color:var(--text-secondary);margin-bottom:20px;line-height:1.6;}
+.pp-sign-confirm{display:flex;align-items:center;gap:10px;background:var(--green-bg);border:1px solid rgba(22,163,74,.2);border-radius:8px;padding:14px;margin-top:14px;}
+.pp-stamp{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);margin-top:10px;line-height:1.8;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-mark">A</div><span class="sidebar-logo-text">Arch<span>Sync</span></span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span> Dashboard</a>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">📁</span> All Projects</a>
+    <a href="tasks.html" class="sidebar-item"><span class="sidebar-item-icon">✅</span> My Tasks</a>
+    <a href="notifications.html" class="sidebar-item"><span class="sidebar-item-icon">🔔</span> Notifications<span class="sidebar-item-badge">3</span></a>
+    <a href="ai.html" class="sidebar-item"><span class="sidebar-item-icon">🤖</span> AI Assistant</a>
+    <div class="sidebar-section">Projects</div>
+    <a href="project.html" class="sidebar-item active"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#1F6FEB;display:inline-block;"></span></span> Riverside Tower</a>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#D97706;display:inline-block;"></span></span> Park Pavilion</a>
+    <div class="sidebar-spacer"></div>
+    <a href="settings.html" class="sidebar-item"><span class="sidebar-item-icon">⚙️</span> Settings</a>
+    <div class="sidebar-user"><div class="sidebar-avatar">AK</div><div class="sidebar-user-info"><div class="sidebar-user-name">Ana Kim</div><div class="sidebar-user-role">Admin · Studio Meridian</div></div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb"><a href="project.html">Riverside Tower</a><span class="sep">/</span><span class="current">Client Portal</span></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('public-view').style.display='flex';document.getElementById('internal-view').style.display='none';">👁 Preview client view</button>
+        <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="notif-dot"></span></button>
+        <div class="sidebar-avatar" style="width:32px;height:32px;cursor:pointer;">AK</div>
+      </div>
+    </div>
+
+    <!-- INTERNAL MANAGEMENT VIEW -->
+    <div id="internal-view" class="content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Client Portal</h1>
+          <p class="page-subtitle">Manage what your client sees — curate files, generate share links, track approvals.</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('new-presentation-modal').style.display='flex'">+ New Presentation</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:24px;">
+        <div>
+          <!-- ACTIVE PRESENTATION -->
+          <div class="section-label" style="margin-bottom:12px;">Active Presentations</div>
+
+          <div class="portal-card">
+            <div class="portal-card-header">
+              <div>
+                <div class="portal-card-title">Design Development Package</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Created Mar 16, 2026 · Expires Apr 16, 2026</div>
+              </div>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <div class="portal-card-status"><div class="live-dot"></div> Live</div>
+                <button class="btn btn-secondary btn-sm" onclick="document.getElementById('public-view').style.display='flex';document.getElementById('internal-view').style.display='none';">Preview →</button>
+              </div>
+            </div>
+
+            <div class="share-link-box" style="margin-bottom:14px;">
+              <div class="share-link-url">https://archsync.io/c/riverside-dd-2026-03</div>
+              <button class="btn btn-secondary btn-sm" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy link',1500)">Copy link</button>
+              <button class="btn btn-ghost btn-sm">QR Code</button>
+            </div>
+
+            <div class="section-label" style="margin-bottom:8px;">Files in this presentation</div>
+            <div class="file-selector">
+              <div class="file-selector-item selected" onclick="this.classList.toggle('selected');this.querySelector('.file-toggle').textContent=this.classList.contains('selected')?'✓':''">
+                <div class="file-toggle">✓</div><span style="font-size:14px;">📄</span>
+                <div style="flex:1;"><div style="font-size:13px;font-weight:500;">Level 03 — Floor Plan.dwg</div><div style="font-size:11px;color:var(--text-tertiary);">v4 · 2.4 MB</div></div>
+                <span class="badge badge-blue" style="font-size:9px;">New</span>
+              </div>
+              <div class="file-selector-item selected" onclick="this.classList.toggle('selected');this.querySelector('.file-toggle').textContent=this.classList.contains('selected')?'✓':''">
+                <div class="file-toggle">✓</div><span style="font-size:14px;">📐</span>
+                <div style="flex:1;"><div style="font-size:13px;font-weight:500;">South Elevation Rev2.dwg</div><div style="font-size:11px;color:var(--text-tertiary);">v2 · 1.8 MB</div></div>
+              </div>
+              <div class="file-selector-item selected" onclick="this.classList.toggle('selected');this.querySelector('.file-toggle').textContent=this.classList.contains('selected')?'✓':''">
+                <div class="file-toggle">✓</div><span style="font-size:14px;">🖼️</span>
+                <div style="flex:1;"><div style="font-size:13px;font-weight:500;">Exterior Renders Set A.pdf</div><div style="font-size:11px;color:var(--text-tertiary);">v1 · 12.6 MB</div></div>
+                <span class="badge badge-green" style="font-size:9px;">Approved</span>
+              </div>
+              <div class="file-selector-item" onclick="this.classList.toggle('selected');this.querySelector('.file-toggle').textContent=this.classList.contains('selected')?'✓':''">
+                <div class="file-toggle"></div><span style="font-size:14px;">📄</span>
+                <div style="flex:1;"><div style="font-size:13px;font-weight:500;">Ground Floor Plan.dwg</div><div style="font-size:11px;color:var(--text-tertiary);">v5 — hidden from client</div></div>
+                <span class="badge badge-gray" style="font-size:9px;">Hidden</span>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn btn-secondary btn-sm">Save changes</button>
+              <button class="btn btn-ghost btn-sm" style="color:var(--red);">Deactivate link</button>
+            </div>
+          </div>
+
+          <!-- APPROVALS -->
+          <div class="section-label" style="margin-bottom:12px;margin-top:4px;">Approval History</div>
+          <div class="portal-card" style="padding:0;">
+            <div style="padding:0 20px;">
+              <div class="approval-item">
+                <div class="avatar avatar-md" style="background:#0891B2;">MC</div>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Michael Chen — Meridian Developments</div>
+                  <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Approved the <strong>Design Development Package</strong></div>
+                  <div class="approval-cert">
+                    <div class="approval-cert-icon">📜</div>
+                    <div>
+                      <div style="font-size:12px;font-weight:600;color:var(--green);">Digital Approval Certificate</div>
+                      <div style="font-size:11px;color:var(--text-secondary);">Signed: "Michael Chen" · IP: 203.0.113.42 · Mar 16, 2026 at 3:31pm AEST</div>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" style="margin-left:auto;">↓ PDF</button>
+                  </div>
+                </div>
+              </div>
+              <div class="approval-item">
+                <div class="avatar avatar-md" style="background:#0891B2;">MC</div>
+                <div style="flex:1;">
+                  <div style="font-size:13px;font-weight:600;color:var(--text-primary);">Michael Chen — Meridian Developments</div>
+                  <div style="font-size:12px;color:var(--text-secondary);margin-top:2px;">Approved the <strong>Schematic Design Package</strong></div>
+                  <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);margin-top:4px;">Feb 10, 2026 · PDF certificate available</div>
+                  <button class="btn btn-secondary btn-sm" style="margin-top:6px;">↓ Download Certificate</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div>
+          <div class="section-label" style="margin-bottom:12px;">Client</div>
+          <div class="card card-sm" style="margin-bottom:16px;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+              <div class="avatar avatar-lg" style="background:#0891B2;">MC</div>
+              <div><div style="font-size:14px;font-weight:600;">Michael Chen</div><div style="font-size:12px;color:var(--text-secondary);">Meridian Developments</div><div style="font-size:11px;color:var(--text-tertiary);">m.chen@meridian.com</div></div>
+            </div>
+            <div style="font-size:12px;color:var(--text-secondary);">Last viewed: <strong>March 16, 2026</strong></div>
+            <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Total approvals: <strong>2</strong></div>
+          </div>
+
+          <div class="section-label" style="margin-bottom:12px;">Portal Settings</div>
+          <div class="card card-sm" style="margin-bottom:16px;">
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label">Expiry date</label>
+              <input class="form-input" type="date" value="2026-04-16" style="height:32px;font-size:12px;">
+            </div>
+            <div class="form-group" style="margin-bottom:10px;">
+              <label class="form-label">Message to client</label>
+              <textarea class="form-input form-textarea" style="height:60px;font-size:12px;">Please review the Design Development package and sign off when ready. Call us with any questions.</textarea>
+            </div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text-secondary);margin-bottom:8px;"><input type="checkbox" checked> Allow file downloads</label>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text-secondary);"><input type="checkbox"> Require client login</label>
+          </div>
+
+          <div class="section-label" style="margin-bottom:12px;">Link Stats</div>
+          <div class="card card-sm">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-secondary);">Total views</span><span style="font-size:13px;font-weight:600;">7</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-secondary);">Files opened</span><span style="font-size:13px;font-weight:600;">12</span></div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span style="font-size:12px;color:var(--text-secondary);">Downloads</span><span style="font-size:13px;font-weight:600;">3</span></div>
+            <div style="display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--text-secondary);">Last viewed</span><span style="font-size:12px;color:var(--text-tertiary);">Mar 16, 3:28pm</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PUBLIC CLIENT VIEW (preview) -->
+    <div id="public-view" style="display:none;background:var(--bg-base);flex:1;overflow-y:auto;">
+      <div style="background:var(--text-primary);padding:10px 20px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;color:rgba(255,255,255,.7);">📱 Previewing client view</span>
+        <button class="btn btn-secondary btn-sm" onclick="document.getElementById('public-view').style.display='none';document.getElementById('internal-view').style.display='block';" style="margin-left:auto;">← Back to management</button>
+      </div>
+      <div class="public-portal">
+        <div class="pp-brand-bar">
+          <div class="pp-brand-logo">A</div>
+          <div><div class="pp-brand-name">Arch<span>Sync</span></div><div style="font-size:11px;color:var(--text-tertiary);">Studio Meridian</div></div>
+        </div>
+        <h1 class="pp-project-title">Riverside Tower</h1>
+        <p class="pp-project-sub">Design Development Package · Prepared by Studio Meridian · March 2026<br>Please review all documents before signing off.</p>
+
+        <div class="pp-section-title">Documents for Review</div>
+        <div class="pp-file-card">
+          <div class="pp-file-icon">📄</div>
+          <div style="flex:1;"><div class="pp-file-name">Level 03 — Floor Plan</div><div style="font-size:12px;color:var(--text-tertiary);">DWG · v4 · 2.4 MB</div></div>
+          <span class="badge badge-blue" style="font-size:10px;">Updated</span>
+          <span class="pp-file-dl">↓</span>
+        </div>
+        <div class="pp-file-card">
+          <div class="pp-file-icon">📐</div>
+          <div style="flex:1;"><div class="pp-file-name">South Elevation Rev 2</div><div style="font-size:12px;color:var(--text-tertiary);">DWG · v2 · 1.8 MB</div></div>
+          <span class="pp-file-dl">↓</span>
+        </div>
+        <div class="pp-file-card">
+          <div class="pp-file-icon">🖼️</div>
+          <div style="flex:1;"><div class="pp-file-name">Exterior Renders Set A</div><div style="font-size:12px;color:var(--text-tertiary);">PDF · v1 · 12.6 MB</div></div>
+          <span class="badge badge-green" style="font-size:10px;">✓ Approved</span>
+          <span class="pp-file-dl">↓</span>
+        </div>
+
+        <div class="pp-sign-box" id="sign-box">
+          <div class="pp-sign-title">✍️ Sign Off on this Package</div>
+          <p class="pp-sign-sub">By signing, you confirm you have reviewed all documents above and approve them for the next stage of design.</p>
+          <div class="form-group">
+            <label class="form-label">Your full name</label>
+            <input class="form-input" id="client-name" placeholder="Type your full name here">
+          </div>
+          <div class="form-label" style="margin-bottom:6px;">Signature</div>
+          <div class="sig-pad" id="sig-pad" onclick="signIt()">Click here to sign</div>
+          <button class="btn btn-primary" style="width:100%;justify-content:center;height:44px;font-size:14px;" onclick="completeSignoff()">Approve & Sign Off →</button>
+          <div class="pp-stamp">🔒 Your IP address and timestamp will be recorded for legal purposes.<br>A PDF approval certificate will be emailed to you.</div>
+        </div>
+
+        <!-- SIGNED STATE (hidden by default) -->
+        <div id="signed-state" style="display:none;background:var(--green-bg);border:1px solid rgba(22,163,74,.3);border-radius:12px;padding:24px;margin-top:24px;text-align:center;">
+          <div style="font-size:36px;margin-bottom:12px;">✅</div>
+          <div style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--text-primary);margin-bottom:8px;">Package Approved</div>
+          <div style="font-size:13px;color:var(--text-secondary);margin-bottom:16px;">Thank you, <strong id="signer-name">Michael Chen</strong>. Your approval has been recorded.</div>
+          <div style="background:var(--bg-surface);border-radius:8px;padding:14px;text-align:left;margin-bottom:16px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary);line-height:2;">
+              Signer: <strong id="signer-name-2">Michael Chen</strong><br>
+              Date & Time: <strong>March 17, 2026 · 10:44 AM AEST</strong><br>
+              IP Address: <strong>203.0.113.42</strong><br>
+              Certificate ID: <strong>AS-2026-0317-RT-001</strong>
+            </div>
+          </div>
+          <button class="btn btn-secondary" style="width:100%;justify-content:center;">↓ Download PDF Certificate</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW PRESENTATION MODAL -->
+<div id="new-presentation-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal" style="max-width:500px;">
+    <h2 class="modal-title">New Client Presentation</h2>
+    <p class="modal-desc">Create a curated link for your client. They won't need an account to access it.</p>
+    <div class="form-group"><label class="form-label">Presentation title</label><input class="form-input" placeholder="e.g. Design Development Package"></div>
+    <div class="form-group"><label class="form-label">Message to client</label><textarea class="form-input form-textarea" placeholder="Optional message shown to client when they open the link..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Expiry date</label><input class="form-input" type="date"></div>
+      <div class="form-group"><label class="form-label">Watermark downloads?</label><select class="form-input form-select"><option>Yes — watermark PDFs</option><option>No watermark</option></select></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('new-presentation-modal').style.display='none'">Cancel</button>
+      <button class="btn btn-primary">Create & Get Link →</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function signIt(){
+  const name = document.getElementById('client-name').value || 'Michael Chen';
+  const pad = document.getElementById('sig-pad');
+  pad.className = 'sig-pad signed';
+  pad.textContent = name;
+}
+function completeSignoff(){
+  const name = document.getElementById('client-name').value || 'Michael Chen';
+  document.getElementById('signer-name').textContent = name;
+  document.getElementById('signer-name-2').textContent = name;
+  document.getElementById('sign-box').style.display = 'none';
+  document.getElementById('signed-state').style.display = 'block';
+  document.getElementById('signed-state').scrollIntoView({behavior:'smooth'});
+}
+</script>
+</body></html>

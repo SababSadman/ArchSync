@@ -18,6 +18,12 @@ import {
 import { supabase } from '../../lib/supabase';
 import { cn } from '../../lib/utils';
 import { FileRecord } from '../../types/file';
+import { BIMViewer } from './BIMViewer';
+import { ImageCommentCanvas } from './ImageCommentCanvas';
+import { CommentThread } from './CommentThread';
+import { ClientFeedbackView } from './ClientFeedbackView';
+import { useComments, useAddComment } from '../../hooks/use-comments';
+import { Video, Pencil } from 'lucide-react';
 
 // pdfjs logic would go here, but for now we'll use a standard object embed or simple iframe for simplicity in this baseline
 // and focus on the zoomable image logic
@@ -32,6 +38,11 @@ export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalP
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCommentMode, setIsCommentMode] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState<string | null>(null);
+
+  const { comments = [] } = useComments(file?.id || '');
+  const addComment = useAddComment();
 
   useEffect(() => {
     if (file && open) {
@@ -54,6 +65,8 @@ export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalP
 
   const isImage = file.mime_type.startsWith('image/');
   const isPdf = file.mime_type.includes('pdf');
+  const isVideo = file.mime_type.startsWith('video/');
+  const isBIM = ['ifc', 'rvt', 'dwg', 'skp'].some(ext => file.name.toLowerCase().endsWith(ext));
 
   const handleDownload = async () => {
     if (!previewUrl) return;
@@ -75,7 +88,7 @@ export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalP
         <DialogHeader className="p-4 border-b border-white/5 bg-slate-900/50 flex flex-row items-center justify-between shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center">
-               {isImage ? <ImageIcon className="w-4 h-4 text-emerald-400" /> : isPdf ? <FileText className="w-4 h-4 text-red-400" /> : <FileIcon className="w-4 h-4 text-slate-400" />}
+               {isImage ? <ImageIcon className="w-4 h-4 text-emerald-400" /> : isPdf ? <FileText className="w-4 h-4 text-red-400" /> : isBIM ? <FileCode className="w-4 h-4 text-blue-400" /> : isVideo ? <Video className="w-4 h-4 text-purple-400" /> : <FileIcon className="w-4 h-4 text-slate-400" />}
             </div>
             <div>
               <DialogTitle className="text-sm font-bold text-white truncate max-w-[300px]" title={file.name}>
@@ -87,7 +100,18 @@ export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalP
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2">
+            {isImage && (
+              <Button 
+                variant={isCommentMode ? "default" : "outline"} 
+                size="sm" 
+                className={cn("h-8 gap-2", isCommentMode ? "bg-emerald-500 hover:bg-emerald-600" : "bg-slate-800 border-slate-700")}
+                onClick={() => setIsCommentMode(!isCommentMode)}
+              >
+                <Pencil className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase tracking-widest leading-none">Comment Mode</span>
+              </Button>
+            )}
             {isImage && (
               <div className="flex items-center bg-slate-800 rounded-lg p-0.5 mr-4">
                 <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-white" onClick={() => setZoom(z => Math.max(0.5, z - 0.2))}>
@@ -120,14 +144,41 @@ export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalP
           ) : previewUrl ? (
             <>
               {isImage && (
-                <div className="w-full h-full overflow-auto custom-scrollbar flex items-center justify-center p-4">
-                  <img 
-                    src={previewUrl} 
-                    alt={file.name} 
-                    className="max-w-none transition-transform duration-200 shadow-2xl"
-                    style={{ transform: `scale(${zoom})` }}
-                  />
-                </div>
+                <ClientFeedbackView comments={comments}>
+                  {(filteredComments) => (
+                    <div className="flex h-full w-full overflow-hidden">
+                      <div className="flex-1 min-w-0">
+                        <ImageCommentCanvas
+                          src={previewUrl}
+                          comments={filteredComments}
+                          isCommentMode={isCommentMode}
+                          onAddComment={async (x, y) => {
+                            const newComment = await addComment.mutateAsync({
+                              file_id: file.id,
+                              content: 'New spatial comment...',
+                              x_percent: x,
+                              y_percent: y,
+                              status: 'open',
+                            });
+                            setSelectedCommentId(newComment.id);
+                          }}
+                          onSelectComment={setSelectedCommentId}
+                          selectedCommentId={selectedCommentId || undefined}
+                        />
+                      </div>
+                      
+                      {selectedCommentId && (
+                        <CommentThread
+                          fileId={file.id}
+                          comments={comments}
+                          activeCommentId={selectedCommentId}
+                          onClose={() => setSelectedCommentId(null)}
+                          projectName="ArchSync Project"
+                        />
+                      )}
+                    </div>
+                  )}
+                </ClientFeedbackView>
               )}
               {isPdf && (
                 <iframe 
@@ -135,6 +186,17 @@ export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalP
                   className="w-full h-full rounded-lg shadow-2xl bg-white"
                   title={file.name}
                 />
+              )}
+              {isVideo && (
+                <video 
+                  src={previewUrl} 
+                  controls 
+                  className="max-w-full max-h-full rounded-lg shadow-2xl"
+                  autoPlay
+                />
+              )}
+              {isBIM && (
+                <BIMViewer url={previewUrl} className="w-full h-full" />
               )}
               {!isImage && !isPdf && (
                 <div className="text-center p-12 bg-slate-900/50 rounded-3xl border border-white/5 backdrop-blur-md">

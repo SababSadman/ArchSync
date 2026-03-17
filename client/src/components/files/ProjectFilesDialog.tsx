@@ -82,6 +82,7 @@ export function ProjectFilesDialog({ projectId, projectName, open, onOpenChange 
               </div>
               <FileUploadZone 
                 projectId={projectId} 
+                projectName={projectName}
                 orgId={orgId || ''} 
                 phase="schematic" // Defaulting to schematic, could be tied to current project phase
                 onUploadComplete={() => setActiveTab('browse')}

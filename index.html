@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — The Architecture Studio Platform</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.hero{max-width:1200px;margin:0 auto;padding:80px 48px 0;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:var(--accent);margin-bottom:20px;}
+.hero-tag::before{content:'';width:24px;height:1px;background:var(--accent);}
+.hero h1{font-family:'DM Serif Display',serif;font-size:clamp(38px,4.5vw,58px);font-weight:400;line-height:1.1;letter-spacing:-.02em;margin-bottom:20px;}
+.hero h1 em{font-style:italic;color:var(--accent);}
+.hero-desc{font-size:16px;color:var(--text-secondary);line-height:1.7;margin-bottom:32px;max-width:460px;}
+.hero-actions{display:flex;align-items:center;gap:12px;}
+.hero-note{font-size:11px;color:var(--text-tertiary);margin-top:10px;font-family:'JetBrains Mono',monospace;}
+.stats-strip{max-width:1200px;margin:56px auto 0;padding:0 48px;display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--border-default);border-radius:12px;background:var(--bg-surface);}
+.stat-cell{padding:24px 28px;border-right:1px solid var(--border-default);}
+.stat-cell:last-child{border-right:none;}
+.stat-n{font-family:'DM Serif Display',serif;font-size:38px;color:var(--text-primary);line-height:1;margin-bottom:4px;}
+.stat-n em{font-style:normal;color:var(--accent);}
+.stat-l{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);letter-spacing:.1em;text-transform:uppercase;}
+
+/* MOCKUP */
+.app-preview{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:12px;overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.08);}
+.preview-bar{height:36px;background:var(--bg-raised);display:flex;align-items:center;padding:0 12px;gap:5px;border-bottom:1px solid var(--border-subtle);}
+.dot{width:9px;height:9px;border-radius:50%;}
+.dot-r{background:#FF5F57;}.dot-y{background:#FFBD2E;}.dot-g{background:#28C840;}
+.preview-url{flex:1;height:20px;background:var(--bg-sunken);border-radius:4px;margin:0 10px;display:flex;align-items:center;padding:0 8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);}
+.preview-body{display:flex;height:340px;}
+.p-sidebar{width:180px;background:var(--bg-surface);border-right:1px solid var(--border-subtle);padding:10px 0;flex-shrink:0;}
+.p-logo{padding:5px 12px 12px;font-family:'DM Serif Display',serif;font-size:14px;color:var(--text-primary);}
+.p-logo span{color:var(--accent);}
+.p-item{display:flex;align-items:center;gap:7px;padding:5px 10px;margin:1px 5px;border-radius:6px;font-size:11px;font-weight:500;color:var(--text-secondary);}
+.p-item.a{background:var(--accent-subtle);color:var(--accent);}
+.p-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.p-main{flex:1;display:flex;flex-direction:column;}
+.p-top{height:40px;background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;padding:0 14px;gap:8px;}
+.p-bc{font-size:10px;color:var(--text-tertiary);flex:1;}
+.p-bc strong{color:var(--text-primary);}
+.p-avs{display:flex;}
+.p-av{width:20px;height:20px;border-radius:50%;border:2px solid var(--bg-surface);font-size:7px;font-weight:600;color:#fff;display:flex;align-items:center;justify-content:center;margin-left:-5px;}
+.p-av:first-child{margin-left:0;}
+.p-content{padding:14px;flex:1;background:var(--bg-base);}
+.p-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.p-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:7px;padding:10px;}
+.p-ct{font-size:10px;font-weight:600;color:var(--text-primary);margin-bottom:3px;}
+.p-cs{font-size:8px;color:var(--text-tertiary);margin-bottom:6px;}
+.p-prog{height:2px;background:var(--bg-sunken);border-radius:1px;margin-bottom:6px;}
+.p-pf{height:100%;border-radius:1px;}
+.p-cf{display:flex;align-items:center;justify-content:space-between;}
+
+/* SECTIONS */
+.section{padding:88px 48px;max-width:1200px;margin:0 auto;}
+.sec-tag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.sec-tag::before{content:'';width:16px;height:1px;background:var(--accent);}
+.sec-h2{font-family:'DM Serif Display',serif;font-size:clamp(30px,3.5vw,42px);font-weight:400;line-height:1.15;letter-spacing:-.02em;margin-bottom:14px;}
+.sec-sub{font-size:15px;color:var(--text-secondary);max-width:500px;line-height:1.7;margin-bottom:52px;}
+.divider{border:none;border-top:1px solid var(--border-subtle);}
+
+/* FEATURE CARDS */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.feat-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:24px;transition:.2s;position:relative;overflow:hidden;}
+.feat-card:hover{border-color:var(--border-strong);box-shadow:0 4px 16px rgba(0,0,0,.06);}
+.feat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.fc-1::before{background:var(--accent);}
+.fc-2::before{background:var(--green);}
+.fc-3::before{background:var(--purple);}
+.fc-4::before{background:var(--orange);}
+.fc-5::before{background:var(--red);}
+.fc-6::before{background:var(--teal);}
+.feat-icon{font-size:24px;margin-bottom:12px;}
+.feat-title{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:6px;}
+.feat-desc{font-size:13px;color:var(--text-secondary);line-height:1.6;}
+.feat-pills{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px;}
+.feat-pill{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;background:var(--bg-raised);color:var(--text-tertiary);border:1px solid var(--border-subtle);}
+
+/* HOW IT WORKS */
+.hiw{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--border-default);border-radius:12px;overflow:hidden;background:var(--bg-surface);}
+.hiw-step{padding:28px 24px;border-right:1px solid var(--border-default);position:relative;}
+.hiw-step:last-child{border-right:none;}
+.hiw-n{font-family:'DM Serif Display',serif;font-size:44px;color:var(--bg-sunken);line-height:1;margin-bottom:10px;}
+.hiw-t{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:6px;}
+.hiw-d{font-size:12px;color:var(--text-secondary);line-height:1.6;}
+.hiw-arr{position:absolute;top:50%;right:-11px;transform:translateY(-50%);width:22px;height:22px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;z-index:1;}
+
+/* PHASES */
+.phases{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.phase-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:20px;}
+.phase-title{font-size:14px;font-weight:600;color:var(--text-primary);margin:10px 0 6px;}
+.phase-desc{font-size:12px;color:var(--text-secondary);line-height:1.55;}
+
+/* DEEP DIVES */
+.deep{display:grid;grid-template-columns:1fr 1fr;gap:52px;align-items:center;margin-bottom:72px;}
+.deep.flip{direction:rtl;}
+.deep.flip > *{direction:ltr;}
+.deep-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);margin-bottom:10px;}
+.deep-title{font-family:'DM Serif Display',serif;font-size:30px;line-height:1.2;margin-bottom:12px;letter-spacing:-.01em;}
+.deep-body{font-size:14px;color:var(--text-secondary);line-height:1.7;margin-bottom:16px;}
+.deep-pts{display:flex;flex-direction:column;gap:9px;}
+.deep-pt{font-size:13px;color:var(--text-secondary);display:flex;gap:8px;}
+.deep-pt::before{content:'→';color:var(--accent);flex-shrink:0;}
+.deep-vis{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.06);}
+
+/* FILE VIEWER MINI */
+.fv-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border-subtle);}
+.fv-fname{font-size:12px;font-weight:500;flex:1;}
+.fv-ver{font-family:'JetBrains Mono',monospace;font-size:9px;background:var(--bg-raised);padding:2px 6px;border-radius:3px;color:var(--text-tertiary);}
+.fv-canvas{height:200px;background:linear-gradient(135deg,#F0EDE8,#E8E4DD);position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.fp{position:relative;width:75%;height:75%;}
+.fpw{position:absolute;background:var(--text-primary);}
+.pin{position:absolute;width:20px;height:20px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.pin span{transform:rotate(45deg);font-size:8px;font-weight:600;color:#fff;}
+.fv-versions{padding:8px 12px;border-top:1px solid var(--border-subtle);display:flex;gap:5px;overflow-x:auto;}
+.ver{font-family:'JetBrains Mono',monospace;font-size:9px;padding:2px 8px;border-radius:3px;border:1px solid var(--border-default);background:var(--bg-raised);color:var(--text-tertiary);white-space:nowrap;cursor:pointer;}
+.ver.cur{background:var(--accent-subtle);border-color:var(--accent);color:var(--accent);}
+
+/* KANBAN MINI */
+.kb-wrap{padding:10px;background:var(--bg-base);}
+.kb-board{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;min-height:200px;}
+.kb-col{background:var(--bg-raised);border-radius:7px;padding:8px;}
+.kb-head{font-size:9px;font-weight:600;color:var(--text-secondary);letter-spacing:.05em;text-transform:uppercase;padding:0 4px 6px;display:flex;align-items:center;justify-content:space-between;}
+.kb-cnt{background:var(--bg-sunken);color:var(--text-tertiary);font-size:8px;padding:1px 4px;border-radius:2px;font-family:'JetBrains Mono',monospace;}
+.kb-c{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:5px;padding:7px;margin-bottom:5px;cursor:grab;}
+.kb-c-t{font-size:10px;font-weight:500;color:var(--text-primary);line-height:1.3;margin-bottom:4px;}
+.kb-c-m{display:flex;align-items:center;gap:4px;}
+
+/* CLIENT PORTAL MINI */
+.cp-head{background:var(--bg-surface);border-bottom:1px solid var(--border-subtle);padding:12px 16px;display:flex;align-items:center;gap:10px;}
+.cp-brand{font-family:'DM Serif Display',serif;font-size:14px;}
+.cp-brand span{color:var(--accent);}
+.cp-body{padding:14px;}
+.cp-title{font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:3px;}
+.cp-sub{font-size:10px;color:var(--text-tertiary);margin-bottom:12px;}
+.cp-file{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border-default);border-radius:6px;background:var(--bg-surface);margin-bottom:5px;}
+.cp-fn{flex:1;font-size:10px;font-weight:500;}
+.cp-fv{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);}
+.cp-sign{background:var(--bg-raised);border:1px solid var(--border-default);border-radius:7px;padding:12px;}
+.cp-s-title{font-size:11px;font-weight:600;margin-bottom:8px;}
+.cp-s-row{display:flex;gap:6px;margin-bottom:6px;}
+.cp-s-inp{flex:1;height:26px;background:var(--bg-sunken);border:1px solid var(--border-default);border-radius:5px;padding:0 8px;font-size:10px;}
+.cp-s-btn{height:26px;padding:0 10px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:10px;font-weight:600;cursor:pointer;}
+
+/* AI CHAT MINI */
+.ai-wrap{padding:12px;}
+.ai-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;}
+.ai-msg{display:flex;gap:6px;}
+.ai-msg.user{flex-direction:row-reverse;}
+.ai-bub{max-width:85%;padding:7px 10px;border-radius:8px;font-size:10px;line-height:1.5;}
+.ai-msg.ai .ai-bub{background:var(--bg-raised);border:1px solid var(--border-subtle);color:var(--text-primary);}
+.ai-msg.user .ai-bub{background:var(--accent);color:#fff;}
+.ai-av{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;margin-top:2px;}
+.ai-av.b{background:var(--accent-subtle);color:var(--accent);border:1px solid var(--border-default);}
+.ai-av.u{background:var(--accent);color:#fff;}
+.ai-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.ai-chip{font-size:9px;padding:3px 8px;border-radius:20px;border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-secondary);cursor:pointer;}
+
+/* PRICING */
+.pricing{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.plan{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:12px;padding:28px;position:relative;}
+.plan.featured{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);}
+.plan-pop{position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;font-size:9px;font-family:'JetBrains Mono',monospace;letter-spacing:.08em;padding:2px 12px;border-radius:0 0 5px 5px;text-transform:uppercase;}
+.plan-name{font-size:11px;font-weight:600;color:var(--text-secondary);letter-spacing:.08em;text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:8px;}
+.plan-price{font-family:'DM Serif Display',serif;font-size:42px;line-height:1;color:var(--text-primary);margin-bottom:3px;}
+.plan-price sub{font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text-secondary);}
+.plan-period{font-size:11px;color:var(--text-tertiary);margin-bottom:24px;}
+.plan-hr{height:1px;background:var(--border-subtle);margin-bottom:20px;}
+.plan-feats{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:24px;}
+.plan-feats li{font-size:13px;color:var(--text-secondary);display:flex;gap:7px;}
+.plan-feats li::before{content:'✓';color:var(--green);font-weight:600;}
+.plan-feats li.no::before{content:'×';color:var(--text-tertiary);}
+.plan-feats li.no{color:var(--text-tertiary);}
+
+/* TESTIMONIALS */
+.testi{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.t-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:24px;}
+.t-quote{font-size:14px;color:var(--text-primary);line-height:1.7;margin-bottom:18px;font-style:italic;}
+.t-author{display:flex;align-items:center;gap:10px;}
+.t-name{font-size:13px;font-weight:600;color:var(--text-primary);}
+.t-role{font-size:11px;color:var(--text-tertiary);}
+
+/* CTA */
+.cta-wrap{background:var(--text-primary);border-radius:16px;padding:64px 80px;text-align:center;margin:0 48px 80px;}
+.cta-wrap h2{font-family:'DM Serif Display',serif;font-size:40px;color:#fff;margin-bottom:14px;letter-spacing:-.02em;}
+.cta-wrap p{font-size:15px;color:rgba(255,255,255,.6);margin-bottom:28px;}
+.cta-btns{display:flex;align-items:center;justify-content:center;gap:10px;}
+.btn-white{background:#fff;color:var(--text-primary);}
+.btn-white:hover{background:var(--bg-raised);}
+.btn-ghost-w{background:transparent;color:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.25);}
+.btn-ghost-w:hover{color:#fff;border-color:rgba(255,255,255,.5);}
+
+/* FOOTER */
+footer{background:var(--bg-surface);border-top:1px solid var(--border-subtle);padding:48px;max-width:none;}
+.footer-inner{max-width:1200px;margin:0 auto;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:36px;}
+.f-brand{font-family:'DM Serif Display',serif;font-size:20px;color:var(--text-primary);margin-bottom:8px;}
+.f-brand span{color:var(--accent);}
+.f-tag{font-size:13px;color:var(--text-secondary);line-height:1.6;max-width:240px;}
+.f-col-title{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary);margin-bottom:12px;}
+.f-links{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.f-links a{font-size:13px;color:var(--text-secondary);text-decoration:none;}
+.f-links a:hover{color:var(--text-primary);}
+.footer-bottom{display:flex;align-items:center;justify-content:space-between;padding-top:20px;border-top:1px solid var(--border-subtle);}
+.f-copy{font-size:12px;color:var(--text-tertiary);}
+.f-legal{display:flex;gap:16px;}
+.f-legal a{font-size:12px;color:var(--text-tertiary);text-decoration:none;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.hero-tag,.hero h1,.hero-desc,.hero-actions{animation:fadeUp .5s ease both;}
+.hero-tag{animation-delay:.0s;}.hero h1{animation-delay:.08s;}.hero-desc{animation-delay:.16s;}.hero-actions{animation-delay:.22s;}
+@media(max-width:900px){.hero,.deep{grid-template-columns:1fr;}.hero-right,.deep.flip .deep-vis{display:none;}.feat-grid,.pricing,.testi,.phases,.hiw{grid-template-columns:1fr 1fr;}.stats-strip{grid-template-columns:repeat(2,1fr);}.cta-wrap{padding:40px 24px;margin:0 16px 48px;}.footer-grid{grid-template-columns:1fr 1fr;}.land-nav-links{display:none;}.section{padding:56px 24px;}.stat-cell{border-bottom:1px solid var(--border-default);}}
+</style>
+</head>
+<body>
+<nav class="land-nav">
+  <a href="index.html" class="land-logo">Arch<span>Sync</span></a>
+  <div class="land-nav-links">
+    <a href="#features">Features</a>
+    <a href="#workflow">How it works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="#testimonials">Testimonials</a>
+  </div>
+  <a href="login.html" class="btn btn-secondary" style="margin-right:8px;height:34px;font-size:13px;">Log in</a>
+  <a href="login.html" class="btn btn-primary" style="height:34px;font-size:13px;">Start free trial</a>
+</nav>
+
+<div class="hero">
+  <div>
+    <div class="hero-tag">Built for Architecture Studios</div>
+    <h1>Where design teams <em>collaborate</em>, clients <em>approve</em>, projects stay <em>in sync.</em></h1>
+    <p class="hero-desc">ArchSync is the project management platform built specifically for architecture studios — file versioning, spatially-pinned comments, AI changelogs, client portal, and digital sign-off in one place.</p>
+    <div class="hero-actions">
+      <a href="login.html" class="btn btn-primary btn-lg">Start for free →</a>
+      <a href="#features" class="btn btn-secondary btn-lg">See all features</a>
+    </div>
+    <p class="hero-note">No credit card required · Free tier includes 3 projects</p>
+  </div>
+  <div>
+    <div class="app-preview">
+      <div class="preview-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><div class="preview-url">app.archsync.io / projects / riverside-tower</div></div>
+      <div class="preview-body">
+        <div class="p-sidebar">
+          <div class="p-logo">Arch<span>Sync</span></div>
+          <div style="padding:4px 6px 2px;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-tertiary);letter-spacing:.1em;text-transform:uppercase;">Menu</div>
+          <div class="p-item a">📁 Projects</div>
+          <div class="p-item">✅ Tasks</div>
+          <div class="p-item">🔔 Notifications</div>
+          <div style="padding:8px 6px 2px;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--text-tertiary);letter-spacing:.1em;text-transform:uppercase;">Projects</div>
+          <div class="p-item a"><span class="p-dot" style="background:#1F6FEB;"></span>Riverside Tower</div>
+          <div class="p-item"><span class="p-dot" style="background:#D97706;"></span>Park Pavilion</div>
+          <div class="p-item"><span class="p-dot" style="background:#16A34A;"></span>Studio HQ</div>
+        </div>
+        <div class="p-main">
+          <div class="p-top">
+            <div class="p-bc">Projects / <strong>Riverside Tower</strong></div>
+            <div class="p-avs">
+              <div class="p-av" style="background:#1F6FEB;">AK</div>
+              <div class="p-av" style="background:#D97706;">MR</div>
+              <div class="p-av" style="background:#16A34A;">JL</div>
+            </div>
+          </div>
+          <div class="p-content">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;"><span style="font-size:12px;font-weight:600;">Riverside Tower</span><span class="badge badge-blue" style="font-size:9px;">Design Dev</span></div>
+            <div class="p-grid">
+              <div class="p-card"><div class="p-ct">Floor Plans</div><div class="p-cs">8 files · v4</div><div class="p-prog"><div class="p-pf" style="width:70%;background:#1F6FEB;"></div></div><div class="p-cf"><span class="badge badge-blue" style="font-size:8px;padding:1px 5px;">Active</span><span style="font-size:8px;color:var(--text-tertiary);">2h ago</span></div></div>
+              <div class="p-card"><div class="p-ct">Elevations</div><div class="p-cs">6 files · v2</div><div class="p-prog"><div class="p-pf" style="width:45%;background:#D97706;"></div></div><div class="p-cf"><span class="badge badge-orange" style="font-size:8px;padding:1px 5px;">Review</span><span style="font-size:8px;color:var(--text-tertiary);">1d ago</span></div></div>
+              <div class="p-card"><div class="p-ct">3D Renders</div><div class="p-cs">12 files · v1</div><div class="p-prog"><div class="p-pf" style="width:90%;background:#16A34A;"></div></div><div class="p-cf"><span class="badge badge-green" style="font-size:8px;padding:1px 5px;">Approved</span><span style="font-size:8px;color:var(--text-tertiary);">3d ago</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stat-cell"><div class="stat-n"><em>42</em></div><div class="stat-l">Built-in features</div></div>
+  <div class="stat-cell"><div class="stat-n">8</div><div class="stat-l">Core modules</div></div>
+  <div class="stat-cell"><div class="stat-n"><em>4</em></div><div class="stat-l">AI superpowers</div></div>
+  <div class="stat-cell"><div class="stat-n">∞</div><div class="stat-l">File versions stored</div></div>
+</div>
+<hr class="divider" style="margin:0;">
+
+<!-- FEATURES -->
+<div id="features">
+<div class="section">
+  <div class="sec-tag">Core Modules</div>
+  <h2 class="sec-h2">Everything your studio needs,<br>in one platform.</h2>
+  <p class="sec-sub">Eight deeply integrated modules covering architecture project delivery — from first sketch to final client sign-off.</p>
+  <div class="feat-grid">
+    <div class="feat-card fc-1"><div class="feat-icon">📁</div><div class="feat-title">File Management & CAD Viewer</div><div class="feat-desc">Upload DWG, DXF, RVT, SKP, IFC, PDF, PNG. In-browser 2D/3D preview with WebGL. Drag-and-drop with type-aware icons.</div><div class="feat-pills"><span class="feat-pill">DWG · RVT · IFC</span><span class="feat-pill">WebGL viewer</span><span class="feat-pill">Portfolio view</span></div></div>
+    <div class="feat-card fc-2"><div class="feat-icon">🕐</div><div class="feat-title">Version Control System</div><div class="feat-desc">Auto-versioning on every upload. Side-by-side comparison slider. One-click restore. Named release pinning for milestone snapshots.</div><div class="feat-pills"><span class="feat-pill">Auto-versioning</span><span class="feat-pill">Diff slider</span><span class="feat-pill">Named releases</span></div></div>
+    <div class="feat-card fc-3"><div class="feat-icon">📍</div><div class="feat-title">Spatially-Pinned Comments</div><div class="feat-desc">Click anywhere on a drawing to pin a comment thread. Markup tools: arrows, circles, text. @mentions auto-create tasks.</div><div class="feat-pills"><span class="feat-pill">Pin anywhere</span><span class="feat-pill">Markup overlay</span><span class="feat-pill">@mentions</span></div></div>
+    <div class="feat-card fc-4"><div class="feat-icon">🗂️</div><div class="feat-title">Task Management & Kanban</div><div class="feat-desc">Drag-and-drop kanban. Tasks link directly to drawing files. Workload view. Task templates per phase. Recurring tasks.</div><div class="feat-pills"><span class="feat-pill">Drag & drop</span><span class="feat-pill">File linking</span><span class="feat-pill">Workload view</span></div></div>
+    <div class="feat-card fc-5"><div class="feat-icon">🌐</div><div class="feat-title">Client Portal & Digital Sign-off</div><div class="feat-desc">Curated client-facing presentations. No login required. Digital sign-off with typed signature, IP timestamp, PDF certificate.</div><div class="feat-pills"><span class="feat-pill">No login needed</span><span class="feat-pill">Digital signature</span><span class="feat-pill">PDF certificate</span></div></div>
+    <div class="feat-card fc-6"><div class="feat-icon">🤖</div><div class="feat-title">AI Features (Claude + GPT)</div><div class="feat-desc">Meeting notes summarizer, auto changelogs, smart file naming, design narrative generator. Powered by Claude Sonnet + GPT-4o-mini.</div><div class="feat-pills"><span class="feat-pill">Meeting summaries</span><span class="feat-pill">AI changelogs</span><span class="feat-pill">Smart naming</span></div></div>
+  </div>
+</div>
+</div>
+<hr class="divider">
+
+<!-- HOW IT WORKS -->
+<div id="workflow">
+<div class="section">
+  <div class="sec-tag">How it works</div>
+  <h2 class="sec-h2">From upload to approval<br>in four steps.</h2>
+  <p class="sec-sub" style="margin-bottom:36px;">ArchSync removes the friction between your team and your clients.</p>
+  <div class="hiw">
+    <div class="hiw-step"><div class="hiw-n">01</div><div class="hiw-t">Upload your drawings</div><div class="hiw-d">Drag-and-drop any format — DWG, RVT, PDF. AI auto-generates a changelog for every new version.</div><div class="hiw-arr">→</div></div>
+    <div class="hiw-step"><div class="hiw-n">02</div><div class="hiw-t">Team reviews & comments</div><div class="hiw-d">Pin comments directly on drawings. @mentions create tasks. Realtime presence shows who's reviewing.</div><div class="hiw-arr">→</div></div>
+    <div class="hiw-step"><div class="hiw-n">03</div><div class="hiw-t">Curate client presentation</div><div class="hiw-d">Select files clients can see. Generate a branded shareable link — no login. WIP stays hidden.</div><div class="hiw-arr">→</div></div>
+    <div class="hiw-step"><div class="hiw-n">04</div><div class="hiw-t">Client signs off digitally</div><div class="hiw-d">Typed signature, IP log, timestamp. PDF approval certificate automatically generated and stored.</div></div>
+  </div>
+</div>
+</div>
+<hr class="divider">
+
+<!-- DEEP DIVES -->
+<div class="section">
+  <div class="sec-tag">Feature Deep Dives</div>
+  <h2 class="sec-h2">Built for how architects<br>actually work.</h2>
+  <p class="sec-sub">Not a generic tool retrofitted for architecture. Every feature was designed around real studio workflows.</p>
+
+  <div class="deep">
+    <div>
+      <div class="deep-label">01 — File Viewer + Version Control</div>
+      <h3 class="deep-title">Review drawings without leaving the browser</h3>
+      <p class="deep-body">Your entire drawing set viewable in one place. Drop comment pins directly on geometry. Full version history with AI-generated changelogs.</p>
+      <div class="deep-pts">
+        <div class="deep-pt">Auto-versioning on every upload — never lose a previous iteration</div>
+        <div class="deep-pt">Side-by-side comparison slider between any two versions</div>
+        <div class="deep-pt">Markup overlay: arrows, circles, text annotations saved per version</div>
+        <div class="deep-pt">Named release pinning: "Issued for Client Review" with one click</div>
+      </div>
+    </div>
+    <div class="deep-vis">
+      <div class="fv-header"><span class="fv-fname">📄 Level-03-Floor-Plan.dwg</span><span class="fv-ver">v4 — current</span><span class="badge badge-blue" style="font-size:9px;">Design Dev</span></div>
+      <div class="fv-canvas">
+        <div class="fp">
+          <div class="fpw" style="top:10%;left:10%;width:80%;height:2px;"></div>
+          <div class="fpw" style="top:10%;left:10%;width:2px;height:80%;"></div>
+          <div class="fpw" style="top:10%;right:10%;width:2px;height:80%;"></div>
+          <div class="fpw" style="bottom:10%;left:10%;width:80%;height:2px;"></div>
+          <div class="fpw" style="top:10%;left:45%;width:2px;height:38%;"></div>
+          <div class="fpw" style="top:48%;left:10%;width:55%;height:2px;"></div>
+          <span style="position:absolute;top:20%;left:14%;font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text-tertiary);">Living Room</span>
+          <span style="position:absolute;top:20%;left:54%;font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text-tertiary);">Bedroom 1</span>
+          <span style="position:absolute;top:60%;left:28%;font-family:'JetBrains Mono',monospace;font-size:7px;color:var(--text-tertiary);">Kitchen</span>
+        </div>
+        <div class="pin" style="background:#1F6FEB;top:28%;left:24%;"><span>3</span></div>
+        <div class="pin" style="background:#D97706;top:42%;left:60%;"><span>1</span></div>
+        <div class="pin" style="background:#16A34A;top:62%;left:40%;"><span>2</span></div>
+      </div>
+      <div class="fv-versions">
+        <span class="ver cur">v4 — current</span>
+        <span class="ver">v3 — 3 days ago</span>
+        <span class="ver">v2 — 1 week ago</span>
+        <span class="ver">v1 — initial</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="deep flip">
+    <div>
+      <div class="deep-label">02 — Kanban Task Management</div>
+      <h3 class="deep-title">Tasks that link directly to your drawings</h3>
+      <p class="deep-body">@mention in a comment auto-creates a task. Each card links to the exact file and version it refers to — no context switching.</p>
+      <div class="deep-pts">
+        <div class="deep-pt">Drag-and-drop kanban across To Do, In Progress, In Review, Done</div>
+        <div class="deep-pt">Task cards link to exact drawing file and version number</div>
+        <div class="deep-pt">Workload view shows tasks per team member across all projects</div>
+        <div class="deep-pt">Templates for each project phase pre-populate standard tasks</div>
+      </div>
+    </div>
+    <div class="deep-vis">
+      <div class="kb-wrap">
+        <div class="kb-board">
+          <div class="kb-col"><div class="kb-head">To Do <span class="kb-cnt">3</span></div><div class="kb-c"><div class="kb-c-t">Revise south elevation</div><div class="kb-c-m"><span class="badge badge-orange" style="font-size:8px;padding:1px 4px;">elevation</span></div></div><div class="kb-c"><div class="kb-c-t">Update site plan boundary</div></div><div class="kb-c"><div class="kb-c-t">Roof plan details</div></div></div>
+          <div class="kb-col"><div class="kb-head">In Progress <span class="kb-cnt">2</span></div><div class="kb-c"><div class="kb-c-t">Structural coordination</div><div class="kb-c-m"><div class="p-av" style="background:#1F6FEB;width:16px;height:16px;font-size:7px;border:none;margin:0;">AK</div></div></div><div class="kb-c"><div class="kb-c-t">Section AA — 1:50</div></div></div>
+          <div class="kb-col"><div class="kb-head">In Review <span class="kb-cnt">1</span></div><div class="kb-c"><div class="kb-c-t">Floor plan v4 — client</div><div class="kb-c-m"><span class="badge badge-purple" style="font-size:8px;padding:1px 4px;">review</span></div></div></div>
+          <div class="kb-col"><div class="kb-head">Done <span class="kb-cnt">4</span></div><div class="kb-c"><div class="kb-c-t">Concept massing</div><div class="kb-c-m"><span class="badge badge-green" style="font-size:8px;padding:1px 4px;">✓</span></div></div><div class="kb-c"><div class="kb-c-t">Program analysis</div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="deep">
+    <div>
+      <div class="deep-label">03 — Client Portal</div>
+      <h3 class="deep-title">A professional front door for every project</h3>
+      <p class="deep-body">Generate a branded shareable link in seconds. Clients only see what you've curated. Digital sign-off with a legal-grade PDF certificate.</p>
+      <div class="deep-pts">
+        <div class="deep-pt">No account or login required for your clients</div>
+        <div class="deep-pt">Studio curates exactly which files and versions are visible</div>
+        <div class="deep-pt">Digital sign-off: name, typed signature, IP address + timestamp</div>
+        <div class="deep-pt">Downloadable PDF approval certificate for every milestone</div>
+      </div>
+    </div>
+    <div class="deep-vis">
+      <div class="cp-head"><div class="cp-brand">Arch<span>Sync</span></div><div style="width:1px;height:16px;background:var(--border-default);"></div><div style="font-size:10px;color:var(--text-secondary);">Riverside Tower — Client Review</div></div>
+      <div class="cp-body">
+        <div class="cp-title">Design Development Package</div>
+        <div class="cp-sub">Prepared by Studio Meridian · Shared March 2026</div>
+        <div class="cp-file"><span>📄</span><div class="cp-fn">Level 03 — Floor Plan</div><div class="cp-fv">v4</div><span class="badge badge-blue" style="font-size:8px;padding:1px 5px;">New</span></div>
+        <div class="cp-file"><span>📐</span><div class="cp-fn">South Elevation</div><div class="cp-fv">v2</div></div>
+        <div class="cp-file"><span>🖼️</span><div class="cp-fn">Exterior Renders × 4</div><div class="cp-fv">v1</div><span class="badge badge-green" style="font-size:8px;padding:1px 5px;">Approved</span></div>
+        <div class="cp-sign" style="margin-top:10px;">
+          <div class="cp-s-title">✍️ Approve this package</div>
+          <div class="cp-s-row"><input class="cp-s-inp" value="Michael Chen" readonly><button class="cp-s-btn">Sign off →</button></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);">🔒 IP logged · Timestamp recorded · PDF issued</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="deep flip">
+    <div>
+      <div class="deep-label">04 — AI Assistant</div>
+      <h3 class="deep-title">Claude + GPT working inside your project</h3>
+      <p class="deep-body">Summarize meetings into action items. Auto-generate changelogs on every upload. Write design narratives. AI that understands architecture context.</p>
+      <div class="deep-pts">
+        <div class="deep-pt">Claude Sonnet for meeting notes, changelogs, design descriptions</div>
+        <div class="deep-pt">GPT-4o-mini for real-time smart file naming and autocomplete</div>
+        <div class="deep-pt">One-click changelog generation every time a version is uploaded</div>
+        <div class="deep-pt">AI understands your project schema — no hallucinated file names</div>
+      </div>
+    </div>
+    <div class="deep-vis">
+      <div class="ai-wrap">
+        <div class="ai-list">
+          <div class="ai-msg ai"><div class="ai-av b">✦</div><div class="ai-bub"><strong>v4 Changelog:</strong> Living room +12m². Bathroom relocated to north wall. Utility room added (6m²). Structural column moved 400mm east per engineer.</div></div>
+          <div class="ai-msg user"><div class="ai-av u">AK</div><div class="ai-bub">Summarize this morning's client meeting</div></div>
+          <div class="ai-msg ai"><div class="ai-av b">✦</div><div class="ai-bub"><strong>Meeting summary — Mar 17</strong><br>Client approved massing. 3 action items: (1) Revise south elevation windows, (2) Raise kitchen ceiling to 3.2m, (3) Confirm facade cladding spec by Friday.</div></div>
+        </div>
+        <div class="ai-chips">
+          <span class="ai-chip">Generate changelog</span>
+          <span class="ai-chip">Summarize meeting</span>
+          <span class="ai-chip">Write narrative</span>
+          <span class="ai-chip">Suggest file name</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<hr class="divider">
+
+<!-- PROJECT PHASES -->
+<div class="section">
+  <div class="sec-tag">Project Lifecycle</div>
+  <h2 class="sec-h2">Built around every phase<br>of design delivery.</h2>
+  <p class="sec-sub" style="margin-bottom:32px;">ArchSync structures projects across the four standard architecture phases.</p>
+  <div class="phases">
+    <div class="phase-card"><span class="badge badge-purple">Schematic</span><div class="phase-title">Schematic Design</div><div class="phase-desc">Upload concept sketches and massing studies. Track client reactions. Establish project baseline with the first versioned drawing set.</div></div>
+    <div class="phase-card"><span class="badge badge-blue">Design Dev</span><div class="phase-title">Design Development</div><div class="phase-desc">Coordinate floor plans, elevations, sections. Spatial comments. Consultant coordination via shared files. Version control on every upload.</div></div>
+    <div class="phase-card"><span class="badge badge-orange">Construction</span><div class="phase-title">Construction Docs</div><div class="phase-desc">Issued-for-construction sets with named releases. RFI tracking. Revision cloud detection. Full audit trail for every change.</div></div>
+    <div class="phase-card"><span class="badge badge-green">Closeout</span><div class="phase-title">Project Closeout</div><div class="phase-desc">As-built documentation. Final client approval with digital sign-off certificate. Archive complete project record — every version, comment, decision.</div></div>
+  </div>
+</div>
+<hr class="divider">
+
+<!-- PRICING -->
+<div id="pricing">
+<div class="section">
+  <div class="sec-tag">Pricing</div>
+  <h2 class="sec-h2">Simple pricing for studios<br>of every size.</h2>
+  <p class="sec-sub">Start free. Scale as your studio grows. All plans include unlimited file uploads and the full version control system.</p>
+  <div class="pricing">
+    <div class="plan">
+      <div class="plan-name">Starter</div>
+      <div class="plan-price">$0<sub>/mo</sub></div>
+      <div class="plan-period">Free forever · no credit card</div>
+      <div class="plan-hr"></div>
+      <ul class="plan-feats">
+        <li>3 active projects</li><li>2 team members</li><li>5 GB file storage</li>
+        <li>Version control (last 10)</li><li>Spatial comments + markup</li>
+        <li class="no">Client portal</li><li class="no">AI features</li><li class="no">Digital sign-off</li>
+      </ul>
+      <a href="login.html" class="btn btn-secondary" style="width:100%;justify-content:center;">Get started free</a>
+    </div>
+    <div class="plan featured">
+      <div class="plan-pop">Most Popular</div>
+      <div class="plan-name">Studio</div>
+      <div class="plan-price">$49<sub>/mo</sub></div>
+      <div class="plan-period">Per studio · billed monthly</div>
+      <div class="plan-hr"></div>
+      <ul class="plan-feats">
+        <li>Unlimited projects</li><li>Up to 10 members</li><li>100 GB storage</li>
+        <li>Unlimited version history</li><li>Full task management</li>
+        <li>Client portal (branded)</li><li>AI meeting summaries + changelogs</li><li>Digital sign-off + PDF</li>
+      </ul>
+      <a href="login.html" class="btn btn-primary" style="width:100%;justify-content:center;">Start 14-day trial</a>
+    </div>
+    <div class="plan">
+      <div class="plan-name">Practice</div>
+      <div class="plan-price">$129<sub>/mo</sub></div>
+      <div class="plan-period">For larger practices · monthly</div>
+      <div class="plan-hr"></div>
+      <ul class="plan-feats">
+        <li>Unlimited projects + members</li><li>1 TB storage</li>
+        <li>All Studio features</li><li>BIM viewer (IFC / RVT)</li>
+        <li>RBAC — 5 role types</li><li>Email + Slack notifications</li><li>Priority support + onboarding</li>
+      </ul>
+      <a href="login.html" class="btn btn-secondary" style="width:100%;justify-content:center;">Contact sales</a>
+    </div>
+  </div>
+</div>
+</div>
+<hr class="divider">
+
+<!-- TESTIMONIALS -->
+<div id="testimonials">
+<div class="section">
+  <div class="sec-tag">What studios say</div>
+  <h2 class="sec-h2">Trusted by architecture<br>teams everywhere.</h2>
+  <div class="testi" style="margin-top:36px;">
+    <div class="t-card"><p class="t-quote">"The client portal alone is worth the subscription. We share a link and get a signed certificate in minutes. Clients love not needing an account."</p><div class="t-author"><div class="avatar avatar-md" style="background:#1F6FEB;">SA</div><div><div class="t-name">Sofia Andersson</div><div class="t-role">Principal, Studio Nordvik</div></div></div></div>
+    <div class="t-card"><p class="t-quote">"We went from five different tools to just one. File storage, tasks, comments, client review — all inside ArchSync. The AI changelog is genuinely magical."</p><div class="t-author"><div class="avatar avatar-md" style="background:#D97706;">JM</div><div><div class="t-name">James Morley</div><div class="t-role">Director, Morley + Co Architecture</div></div></div></div>
+    <div class="t-card"><p class="t-quote">"Spatially-pinned comments changed how we review drawings. Click on the exact wall, leave a thread. No more 'see note on page 4 second paragraph'."</p><div class="t-author"><div class="avatar avatar-md" style="background:#16A34A;">YT</div><div><div class="t-name">Yuki Tanaka</div><div class="t-role">Project Architect, Forma Studio</div></div></div></div>
+  </div>
+</div>
+</div>
+
+<!-- CTA -->
+<div class="cta-wrap">
+  <h2>Ready to bring your studio<br>into one platform?</h2>
+  <p>Start free. No credit card. Set up in under 10 minutes.</p>
+  <div class="cta-btns">
+    <a href="login.html" class="btn btn-white btn-lg">Start free trial →</a>
+    <a href="dashboard.html" class="btn btn-ghost-w btn-lg">See a live demo</a>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div><div class="f-brand">Arch<span>Sync</span></div><div class="f-tag">The project management platform built for architecture studios. File versions, spatial comments, client sign-off.</div></div>
+      <div><div class="f-col-title">Product</div><ul class="f-links"><li><a href="#features">Features</a></li><li><a href="#workflow">How it works</a></li><li><a href="#pricing">Pricing</a></li><li><a href="dashboard.html">Demo app</a></li></ul></div>
+      <div><div class="f-col-title">Company</div><ul class="f-links"><li><a href="#">About</a></li><li><a href="#">Blog</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div><div class="f-col-title">Resources</div><ul class="f-links"><li><a href="#">Documentation</a></li><li><a href="#">API</a></li><li><a href="#">Changelog</a></li><li><a href="#">Help Center</a></li></ul></div>
+    </div>
+    <div class="footer-bottom"><div class="f-copy">© 2026 ArchSync. All rights reserved.</div><div class="f-legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Cookies</a></div></div>
+  </div>
+</footer>
+</body></html>

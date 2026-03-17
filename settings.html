@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — Settings</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.settings-layout{display:grid;grid-template-columns:220px 1fr;gap:24px;}
+.settings-nav{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:8px;height:fit-content;position:sticky;top:80px;}
+.sn-group{padding:6px 8px 2px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary);}
+.sn-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:.12s;margin-bottom:1px;}
+.sn-item:hover{background:var(--bg-raised);color:var(--text-primary);}
+.sn-item.active{background:var(--accent-subtle);color:var(--accent);}
+.settings-section{display:none;}
+.settings-section.active{display:block;}
+.settings-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;padding:24px;margin-bottom:16px;}
+.settings-card-title{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:4px;}
+.settings-card-sub{font-size:13px;color:var(--text-secondary);margin-bottom:20px;}
+.avatar-upload{width:72px;height:72px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;color:#fff;cursor:pointer;position:relative;overflow:hidden;}
+.avatar-upload:hover::after{content:'Change';position:absolute;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;}
+.plan-card{background:var(--bg-base);border:1px solid var(--border-default);border-radius:8px;padding:16px;display:flex;align-items:flex-start;gap:14px;}
+.plan-icon{font-size:24px;}
+.plan-name{font-size:15px;font-weight:600;color:var(--text-primary);}
+.plan-detail{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.usage-row{display:flex;align-items:center;gap:12px;margin-bottom:10px;}
+.usage-label{font-size:12px;color:var(--text-secondary);width:140px;flex-shrink:0;}
+.usage-bar-wrap{flex:1;}
+.usage-bar-track{height:6px;background:var(--bg-sunken);border-radius:3px;overflow:hidden;}
+.usage-bar-fill{height:100%;border-radius:3px;}
+.usage-value{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);width:80px;text-align:right;}
+.integration-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border-subtle);}
+.integration-item:last-child{border-bottom:none;}
+.int-icon{width:40px;height:40px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;background:var(--bg-raised);flex-shrink:0;}
+.int-name{font-size:14px;font-weight:600;color:var(--text-primary);}
+.int-desc{font-size:12px;color:var(--text-secondary);}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--border-strong);border-radius:11px;cursor:pointer;transition:.2s;}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;bottom:3px;left:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle input:checked + .toggle-slider{background:var(--accent);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px);}
+.api-key-row{display:flex;align-items:center;gap:8px;background:var(--bg-sunken);border:1px solid var(--border-default);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text-secondary);}
+.danger-zone{border-color:rgba(220,38,38,.3) !important;}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-mark">A</div><span class="sidebar-logo-text">Arch<span>Sync</span></span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span> Dashboard</a>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">📁</span> All Projects</a>
+    <a href="tasks.html" class="sidebar-item"><span class="sidebar-item-icon">✅</span> My Tasks</a>
+    <a href="notifications.html" class="sidebar-item"><span class="sidebar-item-icon">🔔</span> Notifications</a>
+    <a href="ai.html" class="sidebar-item"><span class="sidebar-item-icon">🤖</span> AI Assistant</a>
+    <div class="sidebar-spacer"></div>
+    <a href="settings.html" class="sidebar-item active"><span class="sidebar-item-icon">⚙️</span> Settings</a>
+    <div class="sidebar-user"><div class="sidebar-avatar">AK</div><div class="sidebar-user-info"><div class="sidebar-user-name">Ana Kim</div><div class="sidebar-user-role">Admin · Studio Meridian</div></div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb"><span class="current">Settings</span></div>
+      <div class="topbar-spacer"></div>
+    </div>
+    <div class="content">
+      <div class="page-header" style="margin-bottom:24px;">
+        <div><h1 class="page-title">Settings</h1><p class="page-subtitle">Manage your account, studio, and preferences</p></div>
+      </div>
+      <div class="settings-layout">
+        <!-- NAV -->
+        <div class="settings-nav">
+          <div class="sn-group">Account</div>
+          <div class="sn-item active" onclick="switchSection('profile',this)">👤 Profile</div>
+          <div class="sn-item" onclick="switchSection('security',this)">🔒 Security</div>
+          <div class="sn-group">Studio</div>
+          <div class="sn-item" onclick="switchSection('studio',this)">🏢 Studio Settings</div>
+          <div class="sn-item" onclick="switchSection('billing',this)">💳 Billing & Plan</div>
+          <div class="sn-item" onclick="switchSection('integrations',this)">🔌 Integrations</div>
+          <div class="sn-group">Preferences</div>
+          <div class="sn-item" onclick="switchSection('notifications',this)">🔔 Notifications</div>
+          <div class="sn-item" onclick="switchSection('appearance',this)">🎨 Appearance</div>
+          <div class="sn-group">Developers</div>
+          <div class="sn-item" onclick="switchSection('api',this)">⚡ API Keys</div>
+        </div>
+
+        <!-- SECTIONS -->
+        <div>
+          <!-- PROFILE -->
+          <div id="section-profile" class="settings-section active">
+            <div class="settings-card">
+              <div class="settings-card-title">Profile</div>
+              <div class="settings-card-sub">Your personal information and display preferences</div>
+              <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+                <div class="avatar-upload">AK</div>
+                <div><button class="btn btn-secondary btn-sm">Upload photo</button><div style="font-size:11px;color:var(--text-tertiary);margin-top:5px;">JPG or PNG · Max 2MB</div></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+                <div class="form-group"><label class="form-label">First name</label><input class="form-input" value="Ana"></div>
+                <div class="form-group"><label class="form-label">Last name</label><input class="form-input" value="Kim"></div>
+              </div>
+              <div class="form-group"><label class="form-label">Email address</label><input class="form-input" value="ana@studiomeridian.com"></div>
+              <div class="form-group"><label class="form-label">Job title</label><input class="form-input" value="Principal Architect"></div>
+              <div class="form-group"><label class="form-label">Timezone</label><select class="form-input form-select"><option>Australia/Sydney (AEST, UTC+11)</option><option>America/New_York</option><option>Europe/London</option></select></div>
+              <div style="display:flex;gap:8px;"><button class="btn btn-primary">Save changes</button><button class="btn btn-secondary">Cancel</button></div>
+            </div>
+          </div>
+
+          <!-- SECURITY -->
+          <div id="section-security" class="settings-section">
+            <div class="settings-card">
+              <div class="settings-card-title">Password</div>
+              <div class="settings-card-sub">Change your account password</div>
+              <div class="form-group"><label class="form-label">Current password</label><input class="form-input" type="password"></div>
+              <div class="form-group"><label class="form-label">New password</label><input class="form-input" type="password" placeholder="At least 8 characters"></div>
+              <div class="form-group"><label class="form-label">Confirm new password</label><input class="form-input" type="password"></div>
+              <button class="btn btn-primary">Update password</button>
+            </div>
+            <div class="settings-card">
+              <div class="settings-card-title">Two-factor Authentication</div>
+              <div class="settings-card-sub">Add an extra layer of security to your account</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div><div style="font-size:13px;font-weight:500;">Authenticator app</div><div style="font-size:12px;color:var(--text-secondary);">Not enabled</div></div>
+                <button class="btn btn-secondary">Enable 2FA</button>
+              </div>
+            </div>
+            <div class="settings-card">
+              <div class="settings-card-title">Active Sessions</div>
+              <div class="settings-card-sub">Devices currently logged in to your account</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border-subtle);">
+                <div><div style="font-size:13px;font-weight:500;">MacBook Pro · Sydney, AU</div><div style="font-size:11px;color:var(--text-tertiary);">Current session · Chrome · Mar 17</div></div>
+                <span class="badge badge-green" style="font-size:9px;">Current</span>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;">
+                <div><div style="font-size:13px;font-weight:500;">iPhone 15 · Sydney, AU</div><div style="font-size:11px;color:var(--text-tertiary);">Safari · Mar 16</div></div>
+                <button class="btn btn-ghost btn-sm" style="color:var(--red);">Revoke</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- STUDIO -->
+          <div id="section-studio" class="settings-section">
+            <div class="settings-card">
+              <div class="settings-card-title">Studio Settings</div>
+              <div class="settings-card-sub">Configure your studio workspace</div>
+              <div class="form-group"><label class="form-label">Studio name</label><input class="form-input" value="Studio Meridian"></div>
+              <div class="form-group"><label class="form-label">Studio URL slug</label><div style="display:flex;align-items:center;gap:0;"><span style="height:36px;display:flex;align-items:center;background:var(--bg-raised);border:1px solid var(--border-default);border-right:none;border-radius:8px 0 0 8px;padding:0 10px;font-size:13px;color:var(--text-tertiary);white-space:nowrap;">archsync.io/</span><input class="form-input" value="studio-meridian" style="border-radius:0 8px 8px 0;"></div></div>
+              <div class="form-group"><label class="form-label">Industry</label><select class="form-input form-select"><option selected>Architecture</option><option>Interior Design</option><option>Urban Planning</option><option>Landscape Architecture</option></select></div>
+              <div class="form-group"><label class="form-label">Default project phase</label><select class="form-input form-select"><option>Schematic Design</option><option selected>Design Development</option><option>Construction Documents</option></select></div>
+              <div style="display:flex;gap:8px;"><button class="btn btn-primary">Save changes</button></div>
+            </div>
+          </div>
+
+          <!-- BILLING -->
+          <div id="section-billing" class="settings-section">
+            <div class="settings-card">
+              <div class="settings-card-title">Current Plan</div>
+              <div class="plan-card" style="margin-bottom:20px;">
+                <div class="plan-icon">⚡</div>
+                <div style="flex:1;">
+                  <div class="plan-name">Studio Plan <span class="badge badge-blue" style="font-size:10px;vertical-align:middle;">Active</span></div>
+                  <div class="plan-detail">$49/month · Renews April 17, 2026 · Billed to Visa ···· 4242</div>
+                </div>
+                <button class="btn btn-secondary btn-sm">Change plan</button>
+              </div>
+              <div style="margin-bottom:16px;">
+                <div class="usage-row"><div class="usage-label">Projects</div><div class="usage-bar-wrap"><div style="font-size:12px;color:var(--text-secondary);">4 of unlimited</div></div></div>
+                <div class="usage-row"><div class="usage-label">Team members</div><div class="usage-bar-wrap"><div class="usage-bar-track"><div class="usage-bar-fill" style="width:50%;background:var(--accent);"></div></div></div><div class="usage-value">5 / 10</div></div>
+                <div class="usage-row"><div class="usage-label">Storage</div><div class="usage-bar-wrap"><div class="usage-bar-track"><div class="usage-bar-fill" style="width:34%;background:var(--green);"></div></div></div><div class="usage-value">34 / 100 GB</div></div>
+                <div class="usage-row"><div class="usage-label">AI requests (monthly)</div><div class="usage-bar-wrap"><div class="usage-bar-track"><div class="usage-bar-fill" style="width:16%;background:var(--purple);"></div></div></div><div class="usage-value">162 / 1000</div></div>
+              </div>
+              <div style="display:flex;gap:8px;"><button class="btn btn-primary">Upgrade to Practice →</button><button class="btn btn-secondary">Download invoices</button></div>
+            </div>
+            <div class="settings-card">
+              <div class="settings-card-title">Payment Method</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">
+                <div style="display:flex;align-items:center;gap:12px;"><div style="width:40px;height:26px;background:var(--accent);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff;">VISA</div><div><div style="font-size:13px;font-weight:500;">Visa ending in 4242</div><div style="font-size:11px;color:var(--text-tertiary);">Expires 12/2027</div></div></div>
+                <button class="btn btn-ghost btn-sm">Update</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- INTEGRATIONS -->
+          <div id="section-integrations" class="settings-section">
+            <div class="settings-card">
+              <div class="settings-card-title">Integrations</div>
+              <div class="settings-card-sub">Connect ArchSync with your other tools</div>
+              <div class="integration-item">
+                <div class="int-icon">📧</div>
+                <div style="flex:1;"><div class="int-name">Resend (Email)</div><div class="int-desc">Transactional emails for invites, approvals, and notifications</div></div>
+                <span class="badge badge-green" style="font-size:9px;">Connected</span>
+                <button class="btn btn-secondary btn-sm">Configure</button>
+              </div>
+              <div class="integration-item">
+                <div class="int-icon">💬</div>
+                <div style="flex:1;"><div class="int-name">Slack</div><div class="int-desc">Post project activity and notifications to Slack channels</div></div>
+                <span class="badge badge-gray" style="font-size:9px;">Not connected</span>
+                <button class="btn btn-primary btn-sm">Connect</button>
+              </div>
+              <div class="integration-item">
+                <div class="int-icon">📐</div>
+                <div style="flex:1;"><div class="int-name">AutoCAD Sync</div><div class="int-desc">Desktop plugin for AutoCAD — push DWGs directly to ArchSync</div></div>
+                <span class="badge badge-gray" style="font-size:9px;">Beta</span>
+                <button class="btn btn-secondary btn-sm">Download plugin</button>
+              </div>
+              <div class="integration-item">
+                <div class="int-icon">🏗️</div>
+                <div style="flex:1;"><div class="int-name">Revit Sync</div><div class="int-desc">Push RVT models directly from Revit to ArchSync Storage</div></div>
+                <span class="badge badge-gray" style="font-size:9px;">Beta</span>
+                <button class="btn btn-secondary btn-sm">Download plugin</button>
+              </div>
+              <div class="integration-item">
+                <div class="int-icon">📊</div>
+                <div style="flex:1;"><div class="int-name">Google Drive</div><div class="int-desc">Sync meeting notes and documents from Google Drive</div></div>
+                <span class="badge badge-gray" style="font-size:9px;">Not connected</span>
+                <button class="btn btn-primary btn-sm">Connect</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- NOTIFICATIONS SETTINGS -->
+          <div id="section-notifications" class="settings-section">
+            <div class="settings-card">
+              <div class="settings-card-title">Notification Preferences</div>
+              <div class="settings-card-sub">Control when and how you're notified</div>
+              <div style="display:flex;flex-direction:column;gap:0;">
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-subtle);"><div><div style="font-size:13px;font-weight:500;">@Mentions in comments</div><div style="font-size:12px;color:var(--text-secondary);">Email + in-app</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-subtle);"><div><div style="font-size:13px;font-weight:500;">Task assigned to me</div><div style="font-size:12px;color:var(--text-secondary);">Email + in-app</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-subtle);"><div><div style="font-size:13px;font-weight:500;">Client approval received</div><div style="font-size:12px;color:var(--text-secondary);">Email + in-app</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-subtle);"><div><div style="font-size:13px;font-weight:500;">New file uploaded</div><div style="font-size:12px;color:var(--text-secondary);">In-app only</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+                <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;"><div><div style="font-size:13px;font-weight:500;">Weekly project digest</div><div style="font-size:12px;color:var(--text-secondary);">Every Monday morning</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- APPEARANCE -->
+          <div id="section-appearance" class="settings-section">
+            <div class="settings-card">
+              <div class="settings-card-title">Appearance</div>
+              <div class="settings-card-sub">Customise how ArchSync looks for you</div>
+              <div class="form-group"><label class="form-label">Theme</label>
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                  <div style="flex:1;border:2px solid var(--accent);border-radius:8px;padding:12px;cursor:pointer;text-align:center;background:var(--bg-base);">
+                    <div style="font-size:20px;margin-bottom:6px;">☀️</div>
+                    <div style="font-size:12px;font-weight:600;color:var(--accent);">Light</div>
+                  </div>
+                  <div style="flex:1;border:1px solid var(--border-default);border-radius:8px;padding:12px;cursor:pointer;text-align:center;opacity:.6;">
+                    <div style="font-size:20px;margin-bottom:6px;">🌙</div>
+                    <div style="font-size:12px;font-weight:600;color:var(--text-secondary);">Dark (coming soon)</div>
+                  </div>
+                  <div style="flex:1;border:1px solid var(--border-default);border-radius:8px;padding:12px;cursor:pointer;text-align:center;opacity:.6;">
+                    <div style="font-size:20px;margin-bottom:6px;">💻</div>
+                    <div style="font-size:12px;font-weight:600;color:var(--text-secondary);">System</div>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group"><label class="form-label">Default view for file browser</label><select class="form-input form-select"><option>Grid view</option><option selected>List view</option></select></div>
+              <div class="form-group"><label class="form-label">Date format</label><select class="form-input form-select"><option selected>Mar 17, 2026</option><option>17/03/2026</option><option>2026-03-17</option></select></div>
+              <button class="btn btn-primary">Save preferences</button>
+            </div>
+          </div>
+
+          <!-- API -->
+          <div id="section-api" class="settings-section">
+            <div class="settings-card">
+              <div class="settings-card-title">API Keys</div>
+              <div class="settings-card-sub">Use these to authenticate with the ArchSync API</div>
+              <div style="margin-bottom:14px;">
+                <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">Your API key — keep this secret</div>
+                <div class="api-key-row">
+                  <span style="flex:1;">as_live_••••••••••••••••••••••••••••</span>
+                  <button class="btn btn-secondary btn-sm" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Reveal',1500)">Reveal</button>
+                  <button class="btn btn-secondary btn-sm" onclick="this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)">Copy</button>
+                </div>
+              </div>
+              <button class="btn btn-secondary" onclick="if(confirm('Regenerate API key? Your current key will stop working immediately.')){}">Regenerate key</button>
+            </div>
+            <div class="settings-card danger-zone">
+              <div class="settings-card-title" style="color:var(--red);">Danger Zone</div>
+              <div class="settings-card-sub">Irreversible actions — proceed with caution</div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border-subtle);">
+                <div><div style="font-size:13px;font-weight:500;">Delete all projects</div><div style="font-size:12px;color:var(--text-secondary);">Permanently delete all projects and files</div></div>
+                <button class="btn btn-danger btn-sm">Delete all</button>
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">
+                <div><div style="font-size:13px;font-weight:500;">Delete studio account</div><div style="font-size:12px;color:var(--text-secondary);">Permanently delete Studio Meridian and all data</div></div>
+                <button class="btn btn-danger btn-sm">Delete studio</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchSection(name, el){
+  document.querySelectorAll('.settings-section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('section-'+name).classList.add('active');
+  document.querySelectorAll('.sn-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+</body></html>

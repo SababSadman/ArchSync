@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — Dashboard</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.project-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:10px;overflow:hidden;transition:.2s;cursor:pointer;text-decoration:none;display:block;color:inherit;}
+.project-card:hover{border-color:var(--border-strong);box-shadow:0 4px 16px rgba(0,0,0,.07);transform:translateY(-1px);}
+.project-cover{height:120px;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+.project-cover-grid{width:100%;height:100%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:2px;}
+.cover-cell{background:var(--bg-raised);}
+.project-card-body{padding:16px;}
+.project-name{font-size:15px;font-weight:600;color:var(--text-primary);margin-bottom:4px;}
+.project-meta{font-size:12px;color:var(--text-secondary);margin-bottom:10px;}
+.project-footer{display:flex;align-items:center;justify-content:space-between;}
+.project-avatars{display:flex;}
+.project-avatars .avatar{width:22px;height:22px;font-size:8px;border:2px solid var(--bg-surface);margin-left:-5px;}
+.project-avatars .avatar:first-child{margin-left:0;}
+.project-phase-bar{height:3px;border-radius:0 0 10px 10px;}
+.stat-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.stat-card{background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;padding:16px 18px;}
+.stat-card-n{font-family:'DM Serif Display',serif;font-size:30px;color:var(--text-primary);line-height:1;margin-bottom:4px;}
+.stat-card-l{font-size:12px;color:var(--text-secondary);}
+.stat-card-sub{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);margin-top:3px;}
+.activity-row{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-subtle);}
+.activity-row:last-child{border-bottom:none;}
+.act-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--bg-raised);flex-shrink:0;}
+.act-body{flex:1;}
+.act-t{font-size:12px;color:var(--text-primary);line-height:1.4;}
+.act-t strong{font-weight:600;}
+.act-s{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);margin-top:2px;}
+.task-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border-subtle);}
+.task-row:last-child{border-bottom:none;}
+.task-check{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--border-strong);flex-shrink:0;cursor:pointer;}
+.task-title{flex:1;font-size:13px;color:var(--text-primary);}
+.task-project{font-size:11px;color:var(--text-tertiary);}
+.task-due{font-family:'JetBrains Mono',monospace;font-size:10px;}
+.task-due.overdue{color:var(--red);}
+.task-due.soon{color:var(--orange);}
+.view-toggle{display:flex;gap:2px;background:var(--bg-raised);padding:2px;border-radius:6px;}
+.view-btn{width:28px;height:28px;border:none;background:transparent;border-radius:4px;cursor:pointer;font-size:13px;color:var(--text-secondary);transition:.12s;}
+.view-btn.active{background:var(--bg-surface);color:var(--text-primary);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">A</div>
+      <span class="sidebar-logo-text">Arch<span>Sync</span></span>
+    </div>
+    <div class="sidebar-section">Main</div>
+    <a href="dashboard.html" class="sidebar-item active"><span class="sidebar-item-icon">🏠</span> Dashboard</a>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">📁</span> All Projects</a>
+    <a href="tasks.html" class="sidebar-item"><span class="sidebar-item-icon">✅</span> My Tasks<span class="sidebar-item-badge">5</span></a>
+    <a href="notifications.html" class="sidebar-item"><span class="sidebar-item-icon">🔔</span> Notifications<span class="sidebar-item-badge">3</span></a>
+    <a href="ai.html" class="sidebar-item"><span class="sidebar-item-icon">🤖</span> AI Assistant</a>
+    <div class="sidebar-section">Projects</div>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#1F6FEB;display:inline-block;"></span></span> Riverside Tower</a>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#D97706;display:inline-block;"></span></span> Park Pavilion</a>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#16A34A;display:inline-block;"></span></span> Studio HQ Reno</a>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#7C3AED;display:inline-block;"></span></span> Coastal Residence</a>
+    <div class="sidebar-spacer"></div>
+    <a href="settings.html" class="sidebar-item"><span class="sidebar-item-icon">⚙️</span> Settings</a>
+    <div class="sidebar-user">
+      <div class="sidebar-avatar">AK</div>
+      <div class="sidebar-user-info"><div class="sidebar-user-name">Ana Kim</div><div class="sidebar-user-role">Admin · Studio Meridian</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb"><span class="current">Dashboard</span></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="notif-dot"></span></button>
+        <button class="icon-btn">🔍</button>
+        <div class="sidebar-avatar" style="width:32px;height:32px;cursor:pointer;" onclick="location.href='settings.html'">AK</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- HEADER -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Good morning, Ana 👋</h1>
+          <p class="page-subtitle">Studio Meridian · Monday, March 17, 2026</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" onclick="document.getElementById('new-project-modal').style.display='flex'">+ New Project</button>
+          <a href="team.html" class="btn btn-secondary">👥 Team</a>
+        </div>
+      </div>
+
+      <!-- STAT CARDS -->
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-card-n">4</div><div class="stat-card-l">Active Projects</div><div class="stat-card-sub">2 in Design Dev</div></div>
+        <div class="stat-card"><div class="stat-card-n" style="color:var(--orange);">12</div><div class="stat-card-l">Open Tasks</div><div class="stat-card-sub">3 overdue</div></div>
+        <div class="stat-card"><div class="stat-card-n" style="color:var(--accent);">87</div><div class="stat-card-l">Files Managed</div><div class="stat-card-sub">+6 this week</div></div>
+        <div class="stat-card"><div class="stat-card-n" style="color:var(--green);">3</div><div class="stat-card-l">Client Approvals</div><div class="stat-card-sub">This month</div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:24px;">
+        <div>
+          <!-- PROJECTS -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div class="section-label">Projects</div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <div class="view-toggle">
+                <button class="view-btn active">⊞</button>
+                <button class="view-btn">☰</button>
+              </div>
+              <a href="#" class="btn btn-ghost btn-sm">View all →</a>
+            </div>
+          </div>
+          <div class="grid-2" style="margin-bottom:28px;">
+            <a href="project.html" class="project-card">
+              <div class="project-cover" style="background:linear-gradient(135deg,#EEF4FF,#DBEAFE);">
+                <div style="font-size:32px;opacity:.3;">🏢</div>
+                <div style="position:absolute;top:10px;right:10px;"><span class="badge badge-blue">Design Dev</span></div>
+              </div>
+              <div class="project-phase-bar" style="background:var(--accent);"></div>
+              <div class="project-card-body">
+                <div class="project-name">Riverside Tower</div>
+                <div class="project-meta">Mixed-use residential · 42 floors · 87 files</div>
+                <div class="project-footer">
+                  <div class="project-avatars">
+                    <div class="avatar" style="background:#1F6FEB;">AK</div>
+                    <div class="avatar" style="background:#D97706;">MR</div>
+                    <div class="avatar" style="background:#16A34A;">JL</div>
+                    <div class="avatar" style="background:#7C3AED;">+2</div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-tertiary);">Updated 2h ago</span>
+                </div>
+              </div>
+            </a>
+            <a href="project.html" class="project-card">
+              <div class="project-cover" style="background:linear-gradient(135deg,#FFFBEB,#FDE68A);">
+                <div style="font-size:32px;opacity:.3;">🏛️</div>
+                <div style="position:absolute;top:10px;right:10px;"><span class="badge badge-orange">Schematic</span></div>
+              </div>
+              <div class="project-phase-bar" style="background:var(--orange);"></div>
+              <div class="project-card-body">
+                <div class="project-name">Park Pavilion</div>
+                <div class="project-meta">Public pavilion · Waterfront · 23 files</div>
+                <div class="project-footer">
+                  <div class="project-avatars">
+                    <div class="avatar" style="background:#D97706;">MR</div>
+                    <div class="avatar" style="background:#16A34A;">JL</div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-tertiary);">Updated 1d ago</span>
+                </div>
+              </div>
+            </a>
+            <a href="project.html" class="project-card">
+              <div class="project-cover" style="background:linear-gradient(135deg,#F0FDF4,#BBF7D0);">
+                <div style="font-size:32px;opacity:.3;">🏗️</div>
+                <div style="position:absolute;top:10px;right:10px;"><span class="badge badge-green">Closeout</span></div>
+              </div>
+              <div class="project-phase-bar" style="background:var(--green);"></div>
+              <div class="project-card-body">
+                <div class="project-name">Studio HQ Renovation</div>
+                <div class="project-meta">Office fitout · 3 floors · 134 files</div>
+                <div class="project-footer">
+                  <div class="project-avatars">
+                    <div class="avatar" style="background:#16A34A;">JL</div>
+                    <div class="avatar" style="background:#1F6FEB;">AK</div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-tertiary);">Updated 3d ago</span>
+                </div>
+              </div>
+            </a>
+            <a href="project.html" class="project-card">
+              <div class="project-cover" style="background:linear-gradient(135deg,#F3EFFE,#DDD6FE);">
+                <div style="font-size:32px;opacity:.3;">🏠</div>
+                <div style="position:absolute;top:10px;right:10px;"><span class="badge badge-purple">Schematic</span></div>
+              </div>
+              <div class="project-phase-bar" style="background:var(--purple);"></div>
+              <div class="project-card-body">
+                <div class="project-name">Coastal Residence</div>
+                <div class="project-meta">Private home · Beachside · 9 files</div>
+                <div class="project-footer">
+                  <div class="project-avatars">
+                    <div class="avatar" style="background:#7C3AED;">AK</div>
+                    <div class="avatar" style="background:#1F6FEB;">MR</div>
+                  </div>
+                  <span style="font-size:11px;color:var(--text-tertiary);">Updated 5d ago</span>
+                </div>
+              </div>
+            </a>
+          </div>
+
+          <!-- MY TASKS -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+            <div class="section-label">My Tasks</div>
+            <a href="tasks.html" class="btn btn-ghost btn-sm">View all →</a>
+          </div>
+          <div class="card" style="padding:0;">
+            <div style="padding:0 16px;">
+              <div class="task-row"><div class="task-check"></div><div class="task-title">Revise south elevation — client feedback</div><div class="task-project">Riverside Tower</div><div class="task-due overdue">Mar 14</div></div>
+              <div class="task-row"><div class="task-check"></div><div class="task-title">Update structural coordination drawings</div><div class="task-project">Riverside Tower</div><div class="task-due soon">Mar 18</div></div>
+              <div class="task-row"><div class="task-check"></div><div class="task-title">Finalise site plan with new boundary</div><div class="task-project">Park Pavilion</div><div class="task-due">Mar 22</div></div>
+              <div class="task-row"><div class="task-check" style="border-color:var(--green);background:var(--green);"></div><div class="task-title" style="text-decoration:line-through;color:var(--text-tertiary);">Concept massing models</div><div class="task-project" style="color:var(--text-tertiary);">Coastal Residence</div><div class="task-due" style="color:var(--text-tertiary);">Done</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITY FEED -->
+        <div>
+          <div class="section-label" style="margin-bottom:12px;">Live Activity</div>
+          <div class="card" style="padding:0;">
+            <div style="padding:0 14px;">
+              <div class="activity-row"><div class="act-icon">📤</div><div class="act-body"><div class="act-t"><strong>Ana K.</strong> uploaded Level-03-Plan v4</div><div class="act-s">Riverside Tower · Just now</div></div></div>
+              <div class="activity-row"><div class="act-icon">📍</div><div class="act-body"><div class="act-t"><strong>Marco R.</strong> pinned a comment on South Elevation</div><div class="act-s">Riverside Tower · 4m ago</div></div></div>
+              <div class="activity-row"><div class="act-icon">✅</div><div class="act-body"><div class="act-t"><strong>Julia L.</strong> completed task "Structural coordination"</div><div class="act-s">Riverside Tower · 18m ago</div></div></div>
+              <div class="activity-row"><div class="act-icon">🌐</div><div class="act-body"><div class="act-t"><strong>Client</strong> approved the Design Dev package</div><div class="act-s">Riverside Tower · 2h ago</div></div></div>
+              <div class="activity-row"><div class="act-icon">📤</div><div class="act-body"><div class="act-t"><strong>Marco R.</strong> uploaded Park-Pavilion-Site.dwg</div><div class="act-s">Park Pavilion · 5h ago</div></div></div>
+              <div class="activity-row"><div class="act-icon">👥</div><div class="act-body"><div class="act-t"><strong>Julia L.</strong> joined Coastal Residence</div><div class="act-s">Coastal Residence · 1d ago</div></div></div>
+            </div>
+          </div>
+
+          <div class="section-label" style="margin:20px 0 12px;">Online Now</div>
+          <div class="card card-sm">
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="position:relative;"><div class="avatar avatar-sm" style="background:#D97706;">MR</div><div style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#16A34A;border:1px solid #fff;"></div></div>
+                <div><div style="font-size:12px;font-weight:500;color:var(--text-primary);">Marco Rivera</div><div style="font-size:11px;color:var(--text-tertiary);">Viewing South Elevation.dwg</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="position:relative;"><div class="avatar avatar-sm" style="background:#16A34A;">JL</div><div style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#16A34A;border:1px solid #fff;"></div></div>
+                <div><div style="font-size:12px;font-weight:500;color:var(--text-primary);">Julia Lee</div><div style="font-size:11px;color:var(--text-tertiary);">Editing task — Structural plan</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="position:relative;"><div class="avatar avatar-sm" style="background:#7C3AED;">CM</div><div style="position:absolute;bottom:0;right:0;width:7px;height:7px;border-radius:50%;background:#D97706;border:1px solid #fff;"></div></div>
+                <div><div style="font-size:12px;font-weight:500;color:var(--text-primary);">Carlos Méndez</div><div style="font-size:11px;color:var(--text-tertiary);">Idle · last seen 8m ago</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW PROJECT MODAL -->
+<div id="new-project-modal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)this.style.display='none'">
+  <div class="modal">
+    <h2 class="modal-title">New Project</h2>
+    <p class="modal-desc">Create a new project for your studio. You can add team members and upload files once it's created.</p>
+    <div class="form-group"><label class="form-label">Project name</label><input class="form-input" placeholder="e.g. Riverside Tower"></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-input form-textarea" placeholder="Brief description of the project..."></textarea></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Phase</label><select class="form-input form-select"><option>Schematic Design</option><option>Design Development</option><option>Construction Docs</option><option>Closeout</option></select></div>
+      <div class="form-group"><label class="form-label">Deadline</label><input class="form-input" type="date"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="document.getElementById('new-project-modal').style.display='none'">Cancel</button>
+      <a href="project.html" class="btn btn-primary">Create Project →</a>
+    </div>
+  </div>
+</div>
+</body></html>

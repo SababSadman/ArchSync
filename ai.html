@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — AI Assistant</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.ai-shell{display:flex;height:calc(100vh - 52px);overflow:hidden;}
+/* HISTORY SIDEBAR */
+.ai-history{width:240px;flex-shrink:0;border-right:1px solid var(--border-subtle);display:flex;flex-direction:column;background:var(--bg-surface);}
+.ai-hist-header{padding:14px;border-bottom:1px solid var(--border-subtle);display:flex;align-items:center;justify-content:space-between;}
+.ai-hist-title{font-size:13px;font-weight:600;color:var(--text-primary);}
+.ai-hist-list{flex:1;overflow-y:auto;padding:8px;}
+.ai-hist-item{padding:8px 10px;border-radius:7px;cursor:pointer;margin-bottom:2px;transition:.12s;}
+.ai-hist-item:hover{background:var(--bg-raised);}
+.ai-hist-item.active{background:var(--accent-subtle);}
+.ai-hist-label{font-size:12px;font-weight:500;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ai-hist-meta{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--text-tertiary);margin-top:2px;}
+/* MAIN CHAT */
+.ai-main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.ai-chat-area{flex:1;overflow-y:auto;padding:24px 32px;display:flex;flex-direction:column;gap:16px;}
+.ai-msg-row{display:flex;gap:12px;align-items:flex-start;max-width:800px;}
+.ai-msg-row.user{flex-direction:row-reverse;margin-left:auto;}
+.ai-avatar{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ai-avatar.bot{background:var(--accent-subtle);border:1px solid var(--border-default);color:var(--accent);}
+.ai-avatar.user{background:var(--accent);color:#fff;font-size:11px;font-weight:600;}
+.ai-bubble{padding:12px 16px;border-radius:12px;font-size:13px;line-height:1.65;max-width:620px;}
+.ai-msg-row.bot .ai-bubble{background:var(--bg-surface);border:1px solid var(--border-default);color:var(--text-primary);}
+.ai-msg-row.user .ai-bubble{background:var(--accent);color:#fff;}
+.ai-bubble strong{font-weight:600;}
+.ai-bubble code{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(0,0,0,.07);padding:1px 5px;border-radius:3px;}
+.ai-bubble ul{padding-left:16px;margin-top:6px;}
+.ai-bubble ul li{margin-bottom:3px;}
+.ai-bubble .changelog-box{background:var(--bg-raised);border-left:3px solid var(--accent);padding:10px 12px;border-radius:0 6px 6px 0;margin-top:8px;font-size:12px;}
+/* TYPING INDICATOR */
+.typing-indicator{display:flex;gap:4px;padding:12px 16px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:12px;width:fit-content;}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--text-tertiary);animation:bounce 1.2s infinite;}
+.typing-dot:nth-child(2){animation-delay:.2s;}
+.typing-dot:nth-child(3){animation-delay:.4s;}
+@keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+/* INPUT BAR */
+.ai-input-bar{padding:16px 24px;border-top:1px solid var(--border-subtle);background:var(--bg-surface);}
+.ai-input-wrap{background:var(--bg-base);border:1px solid var(--border-default);border-radius:12px;display:flex;align-items:flex-end;padding:8px 12px;gap:8px;transition:.15s;}
+.ai-input-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,111,235,.08);}
+.ai-textarea{flex:1;border:none;background:transparent;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text-primary);resize:none;outline:none;max-height:150px;min-height:22px;line-height:1.5;}
+.ai-send-btn{width:34px;height:34px;background:var(--accent);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;color:#fff;flex-shrink:0;transition:.12s;}
+.ai-send-btn:hover{background:var(--accent-dark);}
+.ai-send-btn:disabled{background:var(--bg-sunken);color:var(--text-tertiary);cursor:default;}
+.ai-context-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;}
+.ai-ctx-chip{font-size:11px;padding:3px 10px;border-radius:5px;border:1px solid var(--border-default);background:var(--bg-surface);color:var(--text-secondary);cursor:pointer;transition:.12s;display:flex;align-items:center;gap:5px;}
+.ai-ctx-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-subtle);}
+.ai-ctx-chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-subtle);}
+/* FEATURE PILLS */
+.feat-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.feat-pill-large{padding:6px 14px;border-radius:20px;border:1px solid var(--border-default);background:var(--bg-surface);font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:.12s;}
+.feat-pill-large:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-subtle);}
+/* RIGHT PANEL */
+.ai-right{width:260px;flex-shrink:0;border-left:1px solid var(--border-subtle);display:flex;flex-direction:column;background:var(--bg-surface);}
+.ai-right-section{padding:14px;border-bottom:1px solid var(--border-subtle);}
+.air-title{font-size:12px;font-weight:600;color:var(--text-primary);margin-bottom:10px;}
+.air-feature{display:flex;align-items:center;gap:10px;padding:8px;border-radius:7px;cursor:pointer;transition:.12s;margin-bottom:4px;}
+.air-feature:hover{background:var(--bg-raised);}
+.air-feature-icon{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.air-feature-name{font-size:12px;font-weight:500;color:var(--text-primary);}
+.air-feature-sub{font-size:10px;color:var(--text-tertiary);}
+.usage-bar{margin-bottom:8px;}
+.usage-label{display:flex;justify-content:space-between;font-size:11px;color:var(--text-secondary);margin-bottom:4px;}
+.usage-track{height:5px;background:var(--bg-sunken);border-radius:3px;overflow:hidden;}
+.usage-fill{height:100%;border-radius:3px;background:var(--accent);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-mark">A</div><span class="sidebar-logo-text">Arch<span>Sync</span></span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span> Dashboard</a>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">📁</span> All Projects</a>
+    <a href="tasks.html" class="sidebar-item"><span class="sidebar-item-icon">✅</span> My Tasks</a>
+    <a href="notifications.html" class="sidebar-item"><span class="sidebar-item-icon">🔔</span> Notifications<span class="sidebar-item-badge">3</span></a>
+    <a href="ai.html" class="sidebar-item active"><span class="sidebar-item-icon">🤖</span> AI Assistant</a>
+    <div class="sidebar-section">Projects</div>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#1F6FEB;display:inline-block;"></span></span> Riverside Tower</a>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#D97706;display:inline-block;"></span></span> Park Pavilion</a>
+    <div class="sidebar-spacer"></div>
+    <a href="settings.html" class="sidebar-item"><span class="sidebar-item-icon">⚙️</span> Settings</a>
+    <div class="sidebar-user"><div class="sidebar-avatar">AK</div><div class="sidebar-user-info"><div class="sidebar-user-name">Ana Kim</div><div class="sidebar-user-role">Admin · Studio Meridian</div></div></div>
+  </aside>
+
+  <div class="main" style="overflow:hidden;">
+    <div class="topbar">
+      <div class="breadcrumb"><span class="current">AI Assistant</span></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);">Powered by Claude Sonnet + GPT-4o-mini</span>
+        <button class="icon-btn" onclick="location.href='notifications.html'">🔔<span class="notif-dot"></span></button>
+        <div class="sidebar-avatar" style="width:32px;height:32px;cursor:pointer;">AK</div>
+      </div>
+    </div>
+
+    <div class="ai-shell">
+      <!-- HISTORY SIDEBAR -->
+      <div class="ai-history">
+        <div class="ai-hist-header">
+          <span class="ai-hist-title">Conversations</span>
+          <button class="btn btn-primary btn-sm" onclick="clearChat()">+ New</button>
+        </div>
+        <div class="ai-hist-list">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary);padding:4px 4px 6px;">Today</div>
+          <div class="ai-hist-item active"><div class="ai-hist-label">Meeting summary — Mar 17</div><div class="ai-hist-meta">Riverside Tower</div></div>
+          <div class="ai-hist-item"><div class="ai-hist-label">Floor plan changelog v4</div><div class="ai-hist-meta">Riverside Tower</div></div>
+          <div class="ai-hist-item"><div class="ai-hist-label">Design narrative draft</div><div class="ai-hist-meta">Park Pavilion</div></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary);padding:12px 4px 6px;">Yesterday</div>
+          <div class="ai-hist-item"><div class="ai-hist-label">File naming suggestions</div><div class="ai-hist-meta">Riverside Tower</div></div>
+          <div class="ai-hist-item"><div class="ai-hist-label">RFI response draft</div><div class="ai-hist-meta">Studio HQ Reno</div></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--text-tertiary);padding:12px 4px 6px;">Mar 15</div>
+          <div class="ai-hist-item"><div class="ai-hist-label">Client presentation text</div><div class="ai-hist-meta">Riverside Tower</div></div>
+          <div class="ai-hist-item"><div class="ai-hist-label">DB schema review</div><div class="ai-hist-meta">Architecture</div></div>
+        </div>
+      </div>
+
+      <!-- MAIN CHAT -->
+      <div class="ai-main">
+        <div class="ai-chat-area" id="chat-area">
+          <!-- WELCOME -->
+          <div id="welcome-state">
+            <div style="text-align:center;padding:32px 0 24px;">
+              <div style="width:52px;height:52px;background:var(--accent-subtle);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 16px;">✦</div>
+              <div style="font-family:'DM Serif Display',serif;font-size:24px;color:var(--text-primary);margin-bottom:8px;">ArchSync AI</div>
+              <div style="font-size:14px;color:var(--text-secondary);max-width:420px;margin:0 auto;">Powered by Claude Sonnet for architecture project intelligence. I know your files, your team, and your project context.</div>
+            </div>
+            <div class="feat-row" style="justify-content:center;margin-bottom:24px;">
+              <div class="feat-pill-large" onclick="sendPrompt('Generate a changelog for the latest floor plan upload')">📋 Generate changelog</div>
+              <div class="feat-pill-large" onclick="sendPrompt('Summarize this morning\'s client meeting notes')">📝 Summarize meeting</div>
+              <div class="feat-pill-large" onclick="sendPrompt('Write a design narrative for the Riverside Tower DD package')">✍️ Write design narrative</div>
+              <div class="feat-pill-large" onclick="sendPrompt('Suggest a file name for the updated south elevation')">🏷️ Suggest file names</div>
+              <div class="feat-pill-large" onclick="sendPrompt('Draft an RFI response for the structural query on Level 3')">📨 Draft RFI response</div>
+              <div class="feat-pill-large" onclick="sendPrompt('What tasks are overdue on Riverside Tower?')">🔍 Project status check</div>
+            </div>
+          </div>
+
+          <!-- SAMPLE CONVERSATION -->
+          <div class="ai-msg-row bot">
+            <div class="ai-avatar bot">✦</div>
+            <div class="ai-bubble">
+              Hello Ana 👋 I've reviewed your Riverside Tower project. Here's a quick status:<br><br>
+              <strong>3 tasks overdue</strong> including "Revise south elevation" (3 days late, assigned to Marco)<br>
+              <strong>New file uploaded:</strong> Level-03-Floor-Plan.dwg v4 — I've auto-generated a changelog below.<br><br>
+              <div class="changelog-box">
+                <strong>AI Changelog — Level-03-Floor-Plan.dwg v4</strong><br>
+                • Living room expanded by 12m² (structural grid adjusted)<br>
+                • Bathroom relocated to north wall per client request<br>
+                • New utility room added — 6m² adjacent to kitchen<br>
+                • Structural column B3 moved 400mm east per engineer's March 14 review<br>
+                • Hallway width maintained at 1,200mm throughout
+              </div>
+              <br>How can I help you today?
+            </div>
+          </div>
+
+          <div class="ai-msg-row user">
+            <div class="ai-avatar user">AK</div>
+            <div class="ai-bubble">Summarize this morning's client meeting notes</div>
+          </div>
+
+          <div class="ai-msg-row bot" id="typing-row" style="display:none;">
+            <div class="ai-avatar bot">✦</div>
+            <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
+          </div>
+
+          <div class="ai-msg-row bot" id="meeting-response">
+            <div class="ai-avatar bot">✦</div>
+            <div class="ai-bubble">
+              <strong>Meeting Summary — March 17, 2026</strong><br>
+              Riverside Tower · Design Development Review<br><br>
+              <strong>Attendees:</strong> Ana Kim, Michael Chen (client), Marco Rivera<br><br>
+              <strong>Key Decisions:</strong>
+              <ul>
+                <li>Client approved overall massing and floor plate arrangement</li>
+                <li>Window pattern on south elevation to be revised — client prefers full-height glazing at corners</li>
+                <li>Kitchen ceiling height raised to 3.2m (from 2.7m)</li>
+                <li>Facade cladding material — studio to confirm timber vs aluminium by Friday March 20</li>
+              </ul>
+              <strong>Action Items:</strong>
+              <ul>
+                <li>Marco: Revise south elevation window pattern — due March 22</li>
+                <li>Ana: Confirm facade cladding spec — due March 20</li>
+                <li>Studio: Issue updated DD package for client sign-off — due March 30</li>
+              </ul>
+              <em style="font-size:11px;color:var(--text-tertiary);">Shall I create these as tasks on the board?</em>
+            </div>
+          </div>
+        </div>
+
+        <!-- INPUT BAR -->
+        <div class="ai-input-bar">
+          <div class="ai-context-chips">
+            <div class="ai-ctx-chip active">📁 Riverside Tower</div>
+            <div class="ai-ctx-chip">📄 Level-03-Floor-Plan.dwg</div>
+            <div class="ai-ctx-chip">+ Add context</div>
+          </div>
+          <div class="ai-input-wrap">
+            <textarea class="ai-textarea" id="ai-input" rows="1" placeholder="Ask anything about your project — or paste meeting notes to summarize..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage();}"></textarea>
+            <button class="ai-send-btn" onclick="sendMessage()">↑</button>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:8px;">
+            <button class="btn btn-ghost btn-sm" onclick="sendPrompt('Create tasks from this meeting summary')">+ Create tasks from above</button>
+            <button class="btn btn-ghost btn-sm" onclick="sendPrompt('Generate changelog for latest upload')">📋 Generate changelog</button>
+            <button class="btn btn-ghost btn-sm" onclick="sendPrompt('Write a design narrative')">✍️ Write narrative</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="ai-right">
+        <div class="ai-right-section">
+          <div class="air-title">AI Features</div>
+          <div class="air-feature" onclick="sendPrompt('Generate a changelog for the latest file version uploaded to Riverside Tower')">
+            <div class="air-feature-icon" style="background:#EEF4FF;">📋</div>
+            <div><div class="air-feature-name">Changelog Generator</div><div class="air-feature-sub">Auto-describes file changes</div></div>
+          </div>
+          <div class="air-feature" onclick="sendPrompt('Summarize the meeting notes I paste below:')">
+            <div class="air-feature-icon" style="background:#F0FDF4;">📝</div>
+            <div><div class="air-feature-name">Meeting Summarizer</div><div class="air-feature-sub">Extract actions from notes</div></div>
+          </div>
+          <div class="air-feature" onclick="sendPrompt('Write a design narrative for the Riverside Tower Design Development package for client presentation')">
+            <div class="air-feature-icon" style="background:#F3EFFE;">✍️</div>
+            <div><div class="air-feature-name">Design Narrative</div><div class="air-feature-sub">Client-ready descriptions</div></div>
+          </div>
+          <div class="air-feature" onclick="sendPrompt('Suggest professional file names for: updated south elevation, ground floor plan revision 3, exterior render hero shot')">
+            <div class="air-feature-icon" style="background:#FFFBEB;">🏷️</div>
+            <div><div class="air-feature-name">Smart File Naming</div><div class="air-feature-sub">Consistent naming conventions</div></div>
+          </div>
+          <div class="air-feature" onclick="sendPrompt('Draft an RFI response for the structural engineer query about the column relocation on Level 3')">
+            <div class="air-feature-icon" style="background:#ECFEFF;">📨</div>
+            <div><div class="air-feature-name">RFI Response</div><div class="air-feature-sub">Draft formal responses</div></div>
+          </div>
+          <div class="air-feature" onclick="sendPrompt('Review my task list and tell me what I should prioritise today on Riverside Tower')">
+            <div class="air-feature-icon" style="background:#FEF2F2;">🎯</div>
+            <div><div class="air-feature-name">Priority Assistant</div><div class="air-feature-sub">What to work on today</div></div>
+          </div>
+        </div>
+
+        <div class="ai-right-section">
+          <div class="air-title">AI Usage This Month</div>
+          <div class="usage-bar"><div class="usage-label"><span>Claude Sonnet</span><span>34 / 100</span></div><div class="usage-track"><div class="usage-fill" style="width:34%;"></div></div></div>
+          <div class="usage-bar"><div class="usage-label"><span>GPT-4o-mini</span><span>128 / 500</span></div><div class="usage-track"><div class="usage-fill" style="width:25.6%;background:var(--green);"></div></div></div>
+          <div style="font-size:11px;color:var(--text-tertiary);margin-top:6px;">Studio plan · Resets Apr 1</div>
+        </div>
+
+        <div class="ai-right-section" style="flex:1;">
+          <div class="air-title">Context</div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.6;">
+            <div style="margin-bottom:6px;"><strong>Project:</strong> Riverside Tower</div>
+            <div style="margin-bottom:6px;"><strong>Phase:</strong> Design Development</div>
+            <div style="margin-bottom:6px;"><strong>Team:</strong> Ana, Marco, Julia, Carlos</div>
+            <div style="margin-bottom:6px;"><strong>Files:</strong> 87 across 6 folders</div>
+            <div style="margin-bottom:6px;"><strong>Open tasks:</strong> 12 (3 overdue)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const responses = {
+  default: `I understand your request. Let me analyse the Riverside Tower project context and help you with that. Based on your current project state — 87 files, Design Development phase, 12 open tasks — here's what I suggest:<br><br>Would you like me to go deeper on any particular aspect? I can review files, generate text, or help you plan your next steps.`,
+  'Generate a changelog': `<strong>AI Changelog — Level-03-Floor-Plan.dwg v4</strong><br><div class="changelog-box">• Living room expanded by 12m² (structural grid adjusted)<br>• Bathroom relocated to north wall per client request Mar 15<br>• New utility room added 6m² adjacent to kitchen<br>• Structural column B3 moved 400mm east<br>• Hallway maintained at 1,200mm throughout<br>• Window schedule updated — 3 new openings on north facade</div>`,
+  'Write a design narrative': `<strong>Riverside Tower — Design Narrative</strong><br>Design Development Phase, March 2026<br><br>Riverside Tower emerges from a commitment to connecting urban residents with the river corridor that defines this precinct. The 42-storey mixed-use tower establishes a strong civic presence while mediating the transition between the dense CBD fabric and the quieter waterfront edge.<br><br>The floor plate organisation prioritises cross-ventilation and river views, with open-plan living areas oriented north-east and service cores tucked to the western boundary. The facade treatment responds to solar orientation — deep horizontal fins shade the western exposure while full-height glazing celebrates the eastern river aspect.<br><br><em>Shall I expand this further or adjust the tone for a specific audience?</em>`,
+  'Suggest a file name': `Here are naming suggestions following your studio's convention:<br><br><strong>South Elevation:</strong><br>• <code>RT-A-2100-ELEV-SOUTH-Rev03.dwg</code><br>• <code>Riverside-Tower_South-Elevation_DD-Rev3.dwg</code><br><br><strong>Ground Floor Plan:</strong><br>• <code>RT-A-1001-GFL-PLAN-Rev03.dwg</code><br><br><strong>Exterior Render:</strong><br>• <code>Riverside-Tower_Exterior-Hero-North_v1.jpg</code><br><br>Which convention do you prefer? I can apply it consistently to all your files.`,
+  'Create tasks': `I've identified 3 action items from the meeting summary. Creating them on the Riverside Tower board now:<br><br>✅ <strong>Revise south elevation window pattern</strong><br>&nbsp;&nbsp;&nbsp;Assigned: Marco Rivera · Due: Mar 22 · Priority: High<br><br>✅ <strong>Confirm facade cladding spec</strong><br>&nbsp;&nbsp;&nbsp;Assigned: Ana Kim · Due: Mar 20 · Priority: High<br><br>✅ <strong>Issue updated DD package for client sign-off</strong><br>&nbsp;&nbsp;&nbsp;Assigned: Ana Kim · Due: Mar 30 · Priority: Medium<br><br>All tasks have been added to the kanban board. <a href="tasks.html" style="color:var(--accent);">View board →</a>`,
+  'Draft an RFI': `<strong>RFI Response Draft</strong><br>Project: Riverside Tower · RFI #12<br>Date: March 17, 2026<br><br>Re: Column B3 Relocation — Level 3 Structural Query<br><br>Thank you for your enquiry regarding the relocation of column B3 on Level 3. We can confirm the following:<br><br>The column has been relocated 400mm east of the original grid position to accommodate the revised apartment layout approved by the client on March 15, 2026. The revised position falls within the tolerance discussed at the March 8 coordination meeting.<br><br>Updated structural drawings are anticipated by March 25. Please refer to drawing RT-S-3001 Rev2 for the revised grid.<br><br><em>Review and adjust before sending. Shall I format this as a formal document?</em>`
+};
+
+function sendMessage(){
+  const input = document.getElementById('ai-input');
+  const text = input.value.trim();
+  if(!text) return;
+  addUserMsg(text);
+  input.value = '';
+  document.getElementById('welcome-state').style.display = 'none';
+  showTyping();
+  setTimeout(()=>{
+    hideTyping();
+    const key = Object.keys(responses).find(k=>text.toLowerCase().includes(k.toLowerCase()));
+    addBotMsg(responses[key] || responses.default);
+  }, 1200);
+}
+
+function sendPrompt(text){
+  document.getElementById('ai-input').value = text;
+  sendMessage();
+}
+
+function addUserMsg(text){
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'ai-msg-row user';
+  div.innerHTML = `<div class="ai-avatar user">AK</div><div class="ai-bubble">${text}</div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addBotMsg(html){
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'ai-msg-row bot';
+  div.innerHTML = `<div class="ai-avatar bot">✦</div><div class="ai-bubble">${html}</div>`;
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTyping(){document.getElementById('typing-row').style.display='flex';}
+function hideTyping(){document.getElementById('typing-row').style.display='none';}
+function clearChat(){document.querySelectorAll('.ai-msg-row').forEach(r=>r.remove());document.getElementById('welcome-state').style.display='block';}
+</script>
+</body></html>

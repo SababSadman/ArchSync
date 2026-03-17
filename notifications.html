@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — Notifications</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+.notif-group-label{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-tertiary);padding:12px 20px 6px;background:var(--bg-raised);border-bottom:1px solid var(--border-subtle);}
+.notif-row{display:flex;align-items:flex-start;gap:14px;padding:14px 20px;border-bottom:1px solid var(--border-subtle);cursor:pointer;transition:.12s;}
+.notif-row:hover{background:var(--bg-raised);}
+.notif-row.unread{background:var(--accent-subtle);}
+.notif-row.unread:hover{background:#E0ECFF;}
+.notif-icon-wrap{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.notif-body{flex:1;}
+.notif-title{font-size:13px;color:var(--text-primary);line-height:1.5;}
+.notif-title strong{font-weight:600;}
+.notif-meta{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-tertiary);margin-top:3px;display:flex;align-items:center;gap:8px;}
+.notif-project{color:var(--accent);}
+.notif-actions{display:flex;gap:6px;margin-top:6px;}
+.notif-right{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.unread-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);}
+.notif-pref-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--border-subtle);}
+.notif-pref-row:last-child{border-bottom:none;}
+.notif-pref-label{font-size:13px;font-weight:500;color:var(--text-primary);}
+.notif-pref-sub{font-size:12px;color:var(--text-secondary);margin-top:2px;}
+.toggle{position:relative;width:38px;height:22px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--border-strong);border-radius:11px;cursor:pointer;transition:.2s;}
+.toggle-slider::before{content:'';position:absolute;width:16px;height:16px;bottom:3px;left:3px;background:#fff;border-radius:50%;transition:.2s;}
+.toggle input:checked + .toggle-slider{background:var(--accent);}
+.toggle input:checked + .toggle-slider::before{transform:translateX(16px);}
+</style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-mark">A</div><span class="sidebar-logo-text">Arch<span>Sync</span></span></div>
+    <div class="sidebar-section">Main</div>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">🏠</span> Dashboard</a>
+    <a href="dashboard.html" class="sidebar-item"><span class="sidebar-item-icon">📁</span> All Projects</a>
+    <a href="tasks.html" class="sidebar-item"><span class="sidebar-item-icon">✅</span> My Tasks</a>
+    <a href="notifications.html" class="sidebar-item active"><span class="sidebar-item-icon">🔔</span> Notifications<span class="sidebar-item-badge">3</span></a>
+    <a href="ai.html" class="sidebar-item"><span class="sidebar-item-icon">🤖</span> AI Assistant</a>
+    <div class="sidebar-section">Projects</div>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#1F6FEB;display:inline-block;"></span></span> Riverside Tower</a>
+    <a href="project.html" class="sidebar-item"><span class="sidebar-item-icon"><span style="width:8px;height:8px;border-radius:50%;background:#D97706;display:inline-block;"></span></span> Park Pavilion</a>
+    <div class="sidebar-spacer"></div>
+    <a href="settings.html" class="sidebar-item"><span class="sidebar-item-icon">⚙️</span> Settings</a>
+    <div class="sidebar-user"><div class="sidebar-avatar">AK</div><div class="sidebar-user-info"><div class="sidebar-user-name">Ana Kim</div><div class="sidebar-user-role">Admin · Studio Meridian</div></div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="breadcrumb"><span class="current">Notifications</span></div>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-actions">
+        <button class="icon-btn">AK</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Notifications</h1>
+          <p class="page-subtitle">3 unread notifications across all projects</p>
+        </div>
+        <div class="page-actions">
+          <button class="btn btn-secondary" onclick="document.querySelectorAll('.notif-row.unread').forEach(r=>{r.classList.remove('unread');document.querySelector('.notif-dot-top').style.display='none';})">Mark all read</button>
+          <button class="btn btn-secondary" onclick="showPane('preferences')">⚙️ Preferences</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 280px;gap:24px;">
+        <div>
+          <!-- NOTIFICATION TABS -->
+          <div class="tabs">
+            <a href="#" class="tab active" onclick="this.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');return false;">All</a>
+            <a href="#" class="tab" onclick="this.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');return false;">@Mentions</a>
+            <a href="#" class="tab" onclick="this.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');return false;">Tasks</a>
+            <a href="#" class="tab" onclick="this.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');return false;">Files</a>
+            <a href="#" class="tab" onclick="this.parentNode.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));this.classList.add('active');return false;">Approvals</a>
+          </div>
+
+          <div class="card" style="padding:0;overflow:hidden;">
+            <div class="notif-group-label">Today</div>
+
+            <div class="notif-row unread" onclick="this.classList.remove('unread')">
+              <div class="notif-icon-wrap" style="background:#F0FDF4;">✅</div>
+              <div class="notif-body">
+                <div class="notif-title"><strong>Client approved the Design Development package</strong> — Riverside Tower</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Michael Chen from Meridian Developments signed off. PDF certificate generated.</div>
+                <div class="notif-meta"><span class="notif-project">Riverside Tower</span><span>Approval</span></div>
+                <div class="notif-actions"><button class="btn btn-secondary btn-sm" onclick="location.href='portal.html'">View approval</button><button class="btn btn-ghost btn-sm">↓ Certificate</button></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">2h ago</span><div class="unread-dot"></div></div>
+            </div>
+
+            <div class="notif-row unread" onclick="this.classList.remove('unread')">
+              <div class="notif-icon-wrap" style="background:#FFFBEB;">📍</div>
+              <div class="notif-body">
+                <div class="notif-title"><strong>Marco Rivera</strong> mentioned you in a comment on <strong>South Elevation Rev2.dwg</strong></div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">"@Ana can you check the window mullion spacing — the engineer has flagged it needs reviewing"</div>
+                <div class="notif-meta"><span class="notif-project">Riverside Tower</span><span>@mention</span></div>
+                <div class="notif-actions"><a href="viewer.html" class="btn btn-secondary btn-sm">View comment</a></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">4h ago</span><div class="unread-dot"></div></div>
+            </div>
+
+            <div class="notif-row unread" onclick="this.classList.remove('unread')">
+              <div class="notif-icon-wrap" style="background:#EEF4FF;">📤</div>
+              <div class="notif-body">
+                <div class="notif-title"><strong>Ana Kim</strong> uploaded a new version of <strong>Level-03-Floor-Plan.dwg</strong> (v4)</div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;font-style:italic;">AI Changelog: Living room +12m², bathroom relocated north wall, utility room added 6m²</div>
+                <div class="notif-meta"><span class="notif-project">Riverside Tower</span><span>File upload</span></div>
+                <div class="notif-actions"><a href="viewer.html" class="btn btn-secondary btn-sm">View file</a></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">6h ago</span><div class="unread-dot"></div></div>
+            </div>
+
+            <div class="notif-group-label">Yesterday</div>
+
+            <div class="notif-row" onclick="this.classList.remove('unread')">
+              <div class="notif-icon-wrap" style="background:#F3EFFE;">✅</div>
+              <div class="notif-body">
+                <div class="notif-title"><strong>Julia Lee</strong> completed task <strong>"Structural coordination drawings"</strong></div>
+                <div class="notif-meta"><span class="notif-project">Riverside Tower</span><span>Task</span></div>
+                <div class="notif-actions"><a href="tasks.html" class="btn btn-ghost btn-sm">View task</a></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">Yesterday 4:22pm</span></div>
+            </div>
+
+            <div class="notif-row">
+              <div class="notif-icon-wrap" style="background:#EEF4FF;">📤</div>
+              <div class="notif-body">
+                <div class="notif-title"><strong>Marco Rivera</strong> uploaded <strong>Park-Pavilion-Site-Plan.dwg</strong></div>
+                <div class="notif-meta"><span class="notif-project">Park Pavilion</span><span>File upload</span></div>
+                <div class="notif-actions"><a href="viewer.html" class="btn btn-secondary btn-sm">View file</a></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">Yesterday 11:05am</span></div>
+            </div>
+
+            <div class="notif-row">
+              <div class="notif-icon-wrap" style="background:#F0FDF4;">👥</div>
+              <div class="notif-body">
+                <div class="notif-title">You invited <strong>Carlos Méndez</strong> to <strong>Riverside Tower</strong> as Viewer</div>
+                <div class="notif-meta"><span class="notif-project">Riverside Tower</span><span>Team</span></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">Yesterday 9:00am</span></div>
+            </div>
+
+            <div class="notif-group-label">Earlier this week</div>
+
+            <div class="notif-row">
+              <div class="notif-icon-wrap" style="background:#FFFBEB;">⚠️</div>
+              <div class="notif-body">
+                <div class="notif-title">Task <strong>"Revise south elevation"</strong> is now overdue</div>
+                <div style="font-size:12px;color:var(--red);margin-top:3px;">Due date was March 14 — 3 days overdue</div>
+                <div class="notif-meta"><span class="notif-project">Riverside Tower</span><span>Task overdue</span></div>
+                <div class="notif-actions"><a href="tasks.html" class="btn btn-danger btn-sm">View task</a></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">Mar 14</span></div>
+            </div>
+
+            <div class="notif-row">
+              <div class="notif-icon-wrap" style="background:#EEF4FF;">📧</div>
+              <div class="notif-body">
+                <div class="notif-title">Email notification sent: <strong>Client portal link for Design Development</strong></div>
+                <div style="font-size:12px;color:var(--text-secondary);margin-top:3px;">Sent to m.chen@meridian.com via Resend</div>
+                <div class="notif-meta"><span class="notif-project">Riverside Tower</span><span>Email</span></div>
+              </div>
+              <div class="notif-right"><span class="notif-meta">Mar 16</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREFERENCES PANEL -->
+        <div>
+          <div class="section-label" style="margin-bottom:12px;">Notification Preferences</div>
+          <div class="card">
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:14px;">In-app Notifications</div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">@Mentions</div><div class="notif-pref-sub">When someone mentions you</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">Task assigned</div><div class="notif-pref-sub">New tasks assigned to you</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">Task overdue</div><div class="notif-pref-sub">When your tasks pass due date</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">File uploaded</div><div class="notif-pref-sub">New files on your projects</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">Client approval</div><div class="notif-pref-sub">When client signs off</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+
+            <hr style="margin:16px 0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text-primary);margin-bottom:14px;">Email Notifications</div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">@Mentions</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">Client approval</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">Weekly digest</div></div><label class="toggle"><input type="checkbox"><span class="toggle-slider"></span></label></div>
+            <div class="notif-pref-row"><div><div class="notif-pref-label">Team invites</div></div><label class="toggle"><input type="checkbox" checked><span class="toggle-slider"></span></label></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>

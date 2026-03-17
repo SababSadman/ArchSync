@@ -3,13 +3,16 @@ import { Sidebar } from './Sidebar';
 import { TopBar } from './TopBar';
 import { NewProjectDialog } from '../projects/NewProjectDialog';
 import { useProjectModal } from '../../store/use-project-modal';
+import { useState } from 'react';
+import { SettingsDialog } from './SettingsDialog';
 
 export function AppLayout() {
   const { isOpen, setIsOpen } = useProjectModal();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-[var(--bg-surface)] text-[var(--text-primary)] font-sans antialiased">
-      <Sidebar />
+      <Sidebar onOpenSettings={() => setSettingsOpen(true)} />
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
         <div className="relative z-20">
           <TopBar />
@@ -24,6 +27,11 @@ export function AppLayout() {
       <NewProjectDialog 
         open={isOpen} 
         onOpenChange={setIsOpen} 
+      />
+
+      <SettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
       />
     </div>
   );

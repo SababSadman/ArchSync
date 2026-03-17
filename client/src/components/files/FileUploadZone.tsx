@@ -1,20 +1,44 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Upload, FileText, FileCode, CheckCircle, AlertCircle, X, Image as ImageIcon, File } from 'lucide-react';
+import { Upload, FileText, FileCode, CheckCircle, AlertCircle, X, Image as ImageIcon, File, Wand2, Video } from 'lucide-react';
 import { Button } from '../ui/button';
-import { useFileUpload, UploadState } from '../../hooks/useFileUpload';
+import { useFileUpload } from '../../hooks/useFileUpload';
 import { cn } from '../../lib/utils';
+import { supabase } from '../../lib/supabase';
+import { toast } from 'sonner';
 
 interface FileUploadZoneProps {
   projectId: string;
+  projectName: string;
   orgId: string;
   phase: string;
   className?: string;
   onUploadComplete?: () => void;
 }
 
-export function FileUploadZone({ projectId, orgId, phase, className, onUploadComplete }: FileUploadZoneProps) {
+export function FileUploadZone({ projectId, projectName, orgId, phase, className, onUploadComplete }: FileUploadZoneProps) {
   const { uploads, uploadFile, cancelUpload, clearUploads } = useFileUpload({ projectId, orgId, phase });
+
+  const suggestName = async (originalFile: File) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/ai/suggest-name`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalName: originalFile.name,
+          phase,
+          projectName
+        })
+      });
+      const data = await response.json();
+      if (data.suggestedName) {
+        return data.suggestedName;
+      }
+    } catch (error) {
+      console.error('AI Suggestion Failed:', error);
+    }
+    return originalFile.name;
+  };
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     acceptedFiles.forEach(file => {
@@ -34,9 +58,10 @@ export function FileUploadZone({ projectId, orgId, phase, className, onUploadCom
 
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
-    if (['jpg', 'jpeg', 'png', 'svg', 'gif'].includes(ext || '')) return <ImageIcon className="w-5 h-5 text-emerald-500" />;
+    if (['jpg', 'jpeg', 'png', 'svg', 'gif', 'webp'].includes(ext || '')) return <ImageIcon className="w-5 h-5 text-emerald-500" />;
     if (ext === 'pdf') return <FileText className="w-5 h-5 text-red-500" />;
-    if (['dwg', 'dxf', 'rvt'].includes(ext || '')) return <FileCode className="w-5 h-5 text-blue-500" />;
+    if (['dwg', 'dxf', 'rvt', 'ifc', 'skp'].includes(ext || '')) return <FileCode className="w-5 h-5 text-blue-500" />;
+    if (['mp4', 'mov', 'webm'].includes(ext || '')) return <Video className="w-5 h-5 text-purple-500" />;
     return <File className="w-5 h-5 text-slate-400" />;
   };
 
@@ -59,21 +84,20 @@ export function FileUploadZone({ projectId, orgId, phase, className, onUploadCom
           <p className="text-sm font-bold text-[var(--text-primary)]">
             {isDragActive ? "Drop files here..." : "Drag & drop project files"}
           </p>
-          <p className="text-xs text-[var(--text-tertiary)] mt-1">
-            DWG, PDF, JPG, PNG or RVT (Max 500MB)
+          <p className="text-xs text-[var(--text-tertiary)] mt-1 font-medium">
+            DWG, RVT, IFC, SKP, PDF, MP4 or Images (Max 500MB)
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="mt-6 font-bold uppercase tracking-widest text-[10px] h-9"
-          onClick={(e) => {
-            e.stopPropagation();
-            // Trigger input manually if needed, but dropzone handles root click
-          }}
-        >
-          Select Files
-        </Button>
+        <div className="flex gap-3 mt-6">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="font-bold uppercase tracking-widest text-[10px] h-9 gap-2"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            Browse Files
+          </Button>
+        </div>
       </div>
 
       {uploads.length > 0 && (

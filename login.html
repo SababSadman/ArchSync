@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ArchSync — Sign In</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+body{background:var(--bg-base);display:grid;grid-template-columns:1fr 1fr;min-height:100vh;}
+.auth-left{background:var(--text-primary);display:flex;flex-direction:column;padding:48px;position:relative;overflow:hidden;}
+.auth-left::before{content:'';position:absolute;top:-100px;right:-100px;width:400px;height:400px;background:radial-gradient(circle,rgba(31,111,235,.2) 0%,transparent 70%);pointer-events:none;}
+.auth-logo{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;margin-bottom:auto;}
+.auth-logo span{color:var(--accent);}
+.auth-headline{font-family:'DM Serif Display',serif;font-size:clamp(32px,3vw,44px);color:#fff;line-height:1.15;letter-spacing:-.02em;margin-bottom:16px;}
+.auth-headline em{font-style:italic;color:rgba(255,255,255,.6);}
+.auth-sub{font-size:15px;color:rgba(255,255,255,.5);line-height:1.7;max-width:360px;margin-bottom:40px;}
+.auth-features{display:flex;flex-direction:column;gap:12px;}
+.auth-feat{display:flex;align-items:center;gap:12px;}
+.auth-feat-icon{width:32px;height:32px;border-radius:7px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.auth-feat-text{font-size:13px;color:rgba(255,255,255,.65);line-height:1.4;}
+.auth-right{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;background:var(--bg-base);}
+.auth-form-wrap{width:100%;max-width:380px;}
+.auth-form-title{font-family:'DM Serif Display',serif;font-size:28px;color:var(--text-primary);margin-bottom:6px;letter-spacing:-.01em;}
+.auth-form-sub{font-size:13px;color:var(--text-secondary);margin-bottom:32px;}
+.auth-form-sub a{color:var(--accent);text-decoration:none;}
+.divider-or{display:flex;align-items:center;gap:12px;margin:20px 0;font-size:12px;color:var(--text-tertiary);}
+.divider-or::before,.divider-or::after{content:'';flex:1;height:1px;background:var(--border-default);}
+.oauth-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:40px;background:var(--bg-surface);border:1px solid var(--border-default);border-radius:8px;font-size:13px;font-weight:500;color:var(--text-primary);cursor:pointer;transition:.15s;margin-bottom:10px;text-decoration:none;}
+.oauth-btn:hover{border-color:var(--border-strong);background:var(--bg-raised);}
+.oauth-icon{width:18px;height:18px;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:13px;}
+.form-footer{font-size:12px;color:var(--text-tertiary);text-align:center;margin-top:20px;line-height:1.6;}
+.form-footer a{color:var(--accent);text-decoration:none;}
+.forgot{font-size:12px;color:var(--accent);text-decoration:none;float:right;margin-top:-12px;margin-bottom:16px;display:block;}
+.tab-toggle{display:flex;background:var(--bg-raised);border-radius:8px;padding:3px;margin-bottom:24px;}
+.tab-toggle button{flex:1;height:32px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-secondary);border-radius:6px;transition:.15s;}
+.tab-toggle button.active{background:var(--bg-surface);color:var(--text-primary);box-shadow:0 1px 4px rgba(0,0,0,.08);}
+@media(max-width:900px){body{grid-template-columns:1fr;}.auth-left{display:none;}}
+</style>
+</head>
+<body>
+<div class="auth-left">
+  <div class="auth-logo">Arch<span>Sync</span></div>
+  <div>
+    <h2 class="auth-headline">Welcome to the future of <em>architecture collaboration.</em></h2>
+    <p class="auth-sub">Join hundreds of studios already managing their projects, files, and client approvals in one place.</p>
+    <div class="auth-features">
+      <div class="auth-feat"><div class="auth-feat-icon">📁</div><div class="auth-feat-text">Drag-and-drop file management with WebGL CAD viewer for DWG, RVT, IFC and more</div></div>
+      <div class="auth-feat"><div class="auth-feat-icon">🕐</div><div class="auth-feat-text">Full version control with side-by-side comparison and named milestone releases</div></div>
+      <div class="auth-feat"><div class="auth-feat-icon">🌐</div><div class="auth-feat-text">Client portal with digital sign-off and auto-generated PDF approval certificates</div></div>
+      <div class="auth-feat"><div class="auth-feat-icon">🤖</div><div class="auth-feat-text">AI meeting summaries, auto changelogs, and smart file naming powered by Claude</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="auth-right">
+  <div class="auth-form-wrap">
+    <div class="tab-toggle">
+      <button class="active" onclick="showLogin()">Sign in</button>
+      <button onclick="showSignup()">Create account</button>
+    </div>
+
+    <!-- LOGIN FORM -->
+    <div id="login-form">
+      <h1 class="auth-form-title">Welcome back</h1>
+      <p class="auth-form-sub">New to ArchSync? <a href="#" onclick="showSignup()">Create an account →</a></p>
+      <a href="#" class="oauth-btn"><span class="oauth-icon">G</span>Continue with Google</a>
+      <a href="#" class="oauth-btn"><span class="oauth-icon">⬛</span>Continue with GitHub</a>
+      <div class="divider-or">or sign in with email</div>
+      <div class="form-group">
+        <label class="form-label">Email address</label>
+        <input class="form-input" type="email" placeholder="you@studio.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" type="password" placeholder="••••••••">
+      </div>
+      <a href="#" class="forgot">Forgot password?</a>
+      <a href="dashboard.html" class="btn btn-primary" style="width:100%;justify-content:center;height:42px;font-size:14px;">Sign in →</a>
+      <div class="form-footer">By signing in, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.</div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="signup-form" style="display:none;">
+      <h1 class="auth-form-title">Create your account</h1>
+      <p class="auth-form-sub">Already have one? <a href="#" onclick="showLogin()">Sign in →</a></p>
+      <a href="#" class="oauth-btn"><span class="oauth-icon">G</span>Continue with Google</a>
+      <div class="divider-or">or sign up with email</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label class="form-label">First name</label><input class="form-input" placeholder="Ana"></div>
+        <div class="form-group"><label class="form-label">Last name</label><input class="form-input" placeholder="Kim"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Email address</label><input class="form-input" type="email" placeholder="you@studio.com"></div>
+      <div class="form-group"><label class="form-label">Studio / Organization name</label><input class="form-input" placeholder="Studio Meridian"></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" type="password" placeholder="At least 8 characters"></div>
+      <a href="dashboard.html" class="btn btn-primary" style="width:100%;justify-content:center;height:42px;font-size:14px;margin-top:4px;">Create account →</a>
+      <div class="form-footer">Free tier includes 3 projects. No credit card required.<br><a href="#">Terms</a> · <a href="#">Privacy</a></div>
+    </div>
+  </div>
+</div>
+<script>
+function showLogin(){document.getElementById('login-form').style.display='block';document.getElementById('signup-form').style.display='none';document.querySelectorAll('.tab-toggle button')[0].classList.add('active');document.querySelectorAll('.tab-toggle button')[1].classList.remove('active');}
+function showSignup(){document.getElementById('signup-form').style.display='block';document.getElementById('login-form').style.display='none';document.querySelectorAll('.tab-toggle button')[1].classList.add('active');document.querySelectorAll('.tab-toggle button')[0].classList.remove('active');}
+</script>
+</body></html>

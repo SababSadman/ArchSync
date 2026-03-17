@@ -10,7 +10,8 @@ import {
   Download, 
   Eye, 
   History, 
-  MoreVertical 
+  MoreVertical,
+  Video
 } from 'lucide-react';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
@@ -46,7 +47,8 @@ export function FileGrid({ files, isLoading, onPreview, onDownload, onViewVersio
   const getFileIcon = (mimeType: string) => {
     if (mimeType.startsWith('image/')) return <ImageIcon className="w-8 h-8 text-emerald-500/80" />;
     if (mimeType.includes('pdf')) return <FileText className="w-8 h-8 text-red-500/80" />;
-    if (mimeType.includes('dwg') || mimeType.includes('dxf')) return <FileCode className="w-8 h-8 text-blue-500/80" />;
+    if (['dwg', 'dxf', 'rvt', 'ifc', 'skp'].some(ext => mimeType.includes(ext))) return <FileCode className="w-8 h-8 text-blue-500/80" />;
+    if (mimeType.startsWith('video/')) return <Video className="w-8 h-8 text-purple-500/80" />;
     return <FileIcon className="w-8 h-8 text-slate-400/80" />;
   };
 
