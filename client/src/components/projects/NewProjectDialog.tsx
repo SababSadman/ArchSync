@@ -9,6 +9,7 @@ import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Info } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useCreateProject } from '../../hooks/use-projects';
+import { addMonths } from 'date-fns';
 import { ProjectPhase, ProjectType } from '../../types/project';
 
 interface NewProjectDialogProps {
@@ -28,7 +29,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
   const [description, setDescription] = useState('');
   const [phase, setPhase] = useState<ProjectPhase>('schematic');
   const [projectType, setProjectType] = useState<ProjectType>('residential');
-  const [deadline, setDeadline] = useState<Date | undefined>(undefined);
+  const [deadline, setDeadline] = useState<Date | undefined>(addMonths(new Date(), 3));
   const [calendarOpen, setCalendarOpen] = useState(false);
 
   const createMutation = useCreateProject();
@@ -63,7 +64,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
     setDescription('');
     setPhase('schematic');
     setProjectType('residential');
-    setDeadline(undefined);
+    setDeadline(addMonths(new Date(), 3));
   };
 
   return (
@@ -142,6 +143,7 @@ export function NewProjectDialog({ open, onOpenChange }: NewProjectDialogProps) 
               <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
                 <PopoverTrigger asChild>
                   <Button
+                    type="button"
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-medium bg-[var(--bg-surface)] border-[var(--border-default)] h-11 transition-all hover:border-[var(--accent)] px-4"

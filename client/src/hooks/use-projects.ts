@@ -6,7 +6,14 @@ export function useProjects(filters?: { status?: string; phase?: string; search?
   return useQuery({
     queryKey: ['projects', filters, sort],
     queryFn: async () => {
-      let query = supabase.from('projects').select('*');
+      // 1. Get current user's organization
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
+
+      let organizationId = user.user_metadata?.organization_id;
+
+      // 2. Query projects for this organization
+      let query = supabase.from('projects').select('*').eq('organization_id', organizationId);
 
       if (filters?.status && filters.status !== 'all') {
         query = query.eq('status', filters.status);
@@ -46,10 +53,11 @@ export function useCreateProject() {
       if (!organizationId || organizationId === '00000000-0000-0000-0000-000000000000') {
         console.log('[CreateProject] No valid organization_id in metadata. Checking database...');
         
-        // Try to find any existing organization
+        // Try to find any organization where the user is a member
         const { data: orgs, error: orgError } = await supabase
-          .from('organizations')
-          .select('id')
+          .from('organization_members')
+          .select('organization_id')
+          .eq('user_id', user.id)
           .limit(1);
 
         if (orgError) {
@@ -57,8 +65,8 @@ export function useCreateProject() {
         }
 
         if (orgs && orgs.length > 0) {
-          organizationId = orgs[0].id;
-          console.log('[CreateProject] Found existing organization:', organizationId);
+          organizationId = orgs[0].organization_id;
+          console.log('[CreateProject] Found existing organization via membership:', organizationId);
         } else {
           // Create a default organization if none exists
           console.log('[CreateProject] No organizations found. Creating default...');

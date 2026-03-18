@@ -77,15 +77,15 @@ export function FileUploadZone({ projectId, projectName, orgId, phase, className
         )}
       >
         <input {...getInputProps()} />
-        <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-          <Upload className={cn("w-6 h-6", isDragActive ? "text-[var(--accent)]" : "text-slate-400")} />
+        <div className="w-14 h-14 rounded-2xl bg-white border border-[var(--border-subtle)] shadow-sm flex items-center justify-center mb-5 group-hover:scale-110 group-hover:shadow-xl transition-all duration-500">
+          <Upload className={cn("w-6 h-6", isDragActive ? "text-[var(--accent)]" : "text-[var(--text-tertiary)]")} />
         </div>
         <div className="text-center">
-          <p className="text-sm font-bold text-[var(--text-primary)]">
-            {isDragActive ? "Drop files here..." : "Drag & drop project files"}
+          <p className="text-[14px] font-bold text-[var(--text-primary)]">
+            {isDragActive ? "Syncing now..." : "Drop assets to sync"}
           </p>
-          <p className="text-xs text-[var(--text-tertiary)] mt-1 font-medium">
-            DWG, RVT, IFC, SKP, PDF, MP4 or Images (Max 500MB)
+          <p className="text-[11px] text-[var(--text-tertiary)] mt-1.5 font-bold font-mono uppercase tracking-tighter opacity-80">
+             DWG · RVT · IFC · SKP · PDF · PNG
           </p>
         </div>
         <div className="flex gap-3 mt-6">

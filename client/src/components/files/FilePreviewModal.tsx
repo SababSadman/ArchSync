@@ -91,10 +91,10 @@ export function FilePreviewModal({ file, open, onOpenChange }: FilePreviewModalP
                {isImage ? <ImageIcon className="w-4 h-4 text-emerald-400" /> : isPdf ? <FileText className="w-4 h-4 text-red-400" /> : isBIM ? <FileCode className="w-4 h-4 text-blue-400" /> : isVideo ? <Video className="w-4 h-4 text-purple-400" /> : <FileIcon className="w-4 h-4 text-slate-400" />}
             </div>
             <div>
-              <DialogTitle className="text-sm font-bold text-white truncate max-w-[300px]" title={file.name}>
+              <DialogTitle className="font-serif text-[18px] italic text-white truncate max-w-[300px]" title={file.name}>
                 {file.name}
               </DialogTitle>
-              <p className="text-[10px] text-slate-400 font-medium font-mono uppercase tracking-wider">
+              <p className="text-[10px] text-slate-400 font-bold font-mono uppercase tracking-[0.2em] mt-0.5 opacity-60">
                 {file.mime_type} • {(file.size_bytes / 1024 / 1024).toFixed(2)} MB
               </p>
             </div>

@@ -5,7 +5,7 @@ export interface ProjectMember {
   id: string;
   project_id: string;
   user_id: string;
-  role: 'viewer' | 'editor' | 'lead' | 'architect' | 'client' | 'consultant';
+  role: 'viewer' | 'editor' | 'lead' | 'architect' | 'client' | 'consultant' | 'admin' | 'owner';
   joined_at: string;
   profile?: {
     full_name: string;
@@ -93,6 +93,28 @@ export function useRemoveProjectMember() {
 
       if (error) throw error;
       return userId;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['project_members', variables.projectId] });
+    },
+  });
+}
+
+export function useUpdateProjectMemberRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ projectId, userId, role }: { projectId: string; userId: string; role: ProjectMember['role'] }) => {
+      const { data, error } = await supabase
+        .from('project_members')
+        .update({ role })
+        .eq('project_id', projectId)
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['project_members', variables.projectId] });

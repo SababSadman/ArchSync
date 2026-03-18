@@ -1,51 +1,70 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
-import { useAuth } from './hooks/use-auth';
+import { Toaster } from 'sonner';
 
-import DashboardPage from './pages/DashboardPage';
-import ProjectsPage from './pages/ProjectsPage';
-import ProjectDetailPage from './pages/ProjectDetailPage';
-import TasksPage from './pages/TasksPage';
-import NotificationsPage from './pages/NotificationsPage';
-import LoginPage from './pages/LoginPage';
-import SignupPage from './pages/SignupPage';
-import ProjectFilesPage from './pages/ProjectFilesPage';
+// Lazy load pages
+const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
+const OnboardingPage = lazy(() => import('./pages/OnboardingPage'));
+const DashboardPage = lazy(() => import('./pages/DashboardPage'));
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage'));
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage'));
+const TasksPage = lazy(() => import('./pages/TasksPage'));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage'));
+const SettingsPage = lazy(() => import('./pages/SettingsPage'));
+const ProjectFilesPage = lazy(() => import('./pages/ProjectFilesPage'));
+const ProjectTeamPage = lazy(() => import('./pages/ProjectTeamPage'));
+
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--bg-base)]">
+      <div className="w-10 h-10 border-2 border-[var(--accent)] border-t-transparent rounded-full animate-spin mb-4" />
+      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[var(--text-tertiary)] font-bold">
+        ArchSync loading...
+      </span>
+    </div>
+  );
+}
 
 function App() {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--bg-base)]">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[var(--accent)] border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-black uppercase tracking-widest text-[var(--text-tertiary)]">ArchSync Studio</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <BrowserRouter>
-      <Routes>
-        {/* Auth Routes */}
-        <Route path="/login" element={!user ? <LoginPage /> : <Navigate to="/dashboard" replace />} />
-        <Route path="/signup" element={!user ? <SignupPage /> : <Navigate to="/dashboard" replace />} />
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          
+          {/* Protected App Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            
+            <Route element={<AppLayout />}>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:id" element={<ProjectDetailPage />} />
+              <Route path="/projects/:id/files" element={<ProjectFilesPage />} />
+              <Route path="/projects/:id/team" element={<ProjectTeamPage />} />
+              <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/settings/:tab" element={<SettingsPage />} />
+              <Route path="/ai" element={
+                <div className="flex flex-col items-center justify-center h-full py-20 text-center">
+                  <span className="text-4xl mb-4">🤖</span>
+                  <h2 className="font-serif text-[24px] italic">AI Assistant Coming Soon</h2>
+                  <p className="text-[var(--text-secondary)] font-medium">We're training your studio knowledge model.</p>
+                </div>
+              } />
+            </Route>
+          </Route>
 
-        {/* Protected App Routes */}
-        <Route element={user ? <AppLayout /> : <Navigate to="/login" replace />}>
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="/dashboard" element={<DashboardPage />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/projects/:id" element={<ProjectDetailPage />} />
-          <Route path="/projects/:id/files" element={<ProjectFilesPage />} />
-          <Route path="/tasks" element={<TasksPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-        </Route>
-
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
-      </Routes>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+      </Suspense>
+      <Toaster position="top-right" richColors closeButton />
     </BrowserRouter>
   );
 }

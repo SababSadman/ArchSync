@@ -11,6 +11,7 @@ import { TeamDialog } from './TeamDialog';
 import { ProjectFilesDialog } from '../files/ProjectFilesDialog';
 import { useProjectFiles } from '../../hooks/use-project-files';
 import { useProjectMembers, ProjectMember } from '../../hooks/use-members';
+import { cn } from '../../lib/utils';
 
 interface ProjectCardProps {
   project: Project;
@@ -108,7 +109,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
       </div>
 
       <CardContent className="p-5 flex-1 flex flex-col">
-        <h4 className="text-lg font-bold text-[var(--text-primary)] leading-snug tracking-tight group-hover:text-[var(--accent)] transition-colors mb-2">
+        <h4 className={cn(
+          "text-lg font-bold text-[var(--text-primary)] leading-snug tracking-tight group-hover:text-[var(--accent)] transition-colors mb-2",
+          project.status === 'completed' && "line-through opacity-60"
+        )}>
           {project.name}
         </h4>
         
@@ -154,14 +158,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
         <div className="flex items-center gap-4">
           <div 
             className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 cursor-pointer hover:underline"
-            onClick={() => setFilesDialogOpen(true)}
+            onClick={(e) => { e.stopPropagation(); setFilesDialogOpen(true); }}
           >
             <FolderPlus className="w-3.5 h-3.5" />
             <span>Files ({files.length})</span>
           </div>
           <div 
             className="flex items-center gap-1.5 text-xs font-bold text-[var(--accent)] cursor-pointer hover:underline"
-            onClick={() => setTeamDialogOpen(true)}
+            onClick={(e) => { e.stopPropagation(); setTeamDialogOpen(true); }}
           >
             <Users className="w-3.5 h-3.5" />
             <span>Team</span>

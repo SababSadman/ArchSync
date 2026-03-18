@@ -116,33 +116,33 @@ export function FileGrid({ files, isLoading, onPreview, onDownload, onViewVersio
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-1 mb-3">
                       <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-[var(--text-primary)] truncate" title={file.name}>
+                        <h4 className="font-serif text-[15px] italic text-[var(--text-primary)] truncate transition-colors group-hover:text-[var(--accent)]" title={file.name}>
                           {file.name}
                         </h4>
-                        <p className="text-[10px] text-[var(--text-tertiary)] font-medium mt-0.5">
+                        <p className="font-mono text-[9px] text-[var(--text-tertiary)] font-bold uppercase tracking-tighter mt-1">
                           {formatFileSize(file.size_bytes)} • {format(new Date(file.created_at), 'MMM d, yyyy')}
                         </p>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]">
                         <MoreVertical className="w-3.5 h-3.5" />
                       </Button>
                     </div>
 
-                    <div className="flex items-center justify-between mt-auto pt-2 border-t border-slate-100 dark:border-slate-800/50">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-5 h-5 border border-white dark:border-slate-900 shadow-sm">
+                    <div className="flex items-center justify-between mt-auto pt-4 border-t border-[var(--border-subtle)]">
+                      <div className="flex items-center gap-2 group/user cursor-pointer">
+                        <Avatar className="w-6 h-6 border-2 border-white shadow-sm group-hover/user:scale-110 transition-transform">
                           <AvatarImage src={file.uploader?.avatar_url} />
-                          <AvatarFallback className="text-[8px] bg-slate-100 font-bold">
+                          <AvatarFallback className="text-[9px] bg-[var(--bg-raised)] font-black text-[var(--text-tertiary)]">
                             {(file.uploader?.full_name || 'U').charAt(0)}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-[9px] font-bold text-[var(--text-secondary)] truncate max-w-[80px]">
+                        <span className="text-[10px] font-bold text-[var(--text-secondary)] truncate max-w-[80px] group-hover/user:text-[var(--text-primary)]">
                           {file.uploader?.full_name || 'Unknown'}
                         </span>
                       </div>
-                      <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-tighter py-0 px-1.5 h-4 bg-slate-50 border-slate-200 text-slate-500">
+                      <span className="font-mono text-[8px] font-black uppercase tracking-widest px-2 py-0.5 bg-[var(--bg-raised)] rounded border border-[var(--border-subtle)] text-[var(--text-tertiary)] shadow-sm">
                         {file.mime_type.split('/').pop()?.toUpperCase()}
-                      </Badge>
+                      </span>
                     </div>
                   </CardContent>
                 </Card>

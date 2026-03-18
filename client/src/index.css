@@ -1,22 +1,38 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @theme {
   --color-bg-base: var(--bg-base);
   --color-bg-surface: var(--bg-surface);
   --color-bg-raised: var(--bg-raised);
   --color-bg-sunken: var(--bg-sunken);
+  
   --color-border-subtle: var(--border-subtle);
   --color-border-default: var(--border-default);
   --color-border-strong: var(--border-strong);
+  
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
   --color-text-tertiary: var(--text-tertiary);
+  
   --color-accent: var(--accent);
-  --color-accent-hover: var(--accent-hover);
   --color-accent-subtle: var(--accent-subtle);
+  --color-accent-dark: var(--accent-dark);
 
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
+  --color-green: var(--green);
+  --color-green-bg: var(--green-bg);
+  --color-orange: var(--orange);
+  --color-orange-bg: var(--orange-bg);
+  --color-red: var(--red);
+  --color-red-bg: var(--red-bg);
+  --color-purple: var(--purple);
+  --color-purple-bg: var(--purple-bg);
+  --color-teal: var(--teal);
+  --color-teal-bg: var(--teal-bg);
+
+  --font-sans: 'DM Sans', sans-serif;
+  --font-serif: 'DM Serif Display', serif;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
 @layer base {
@@ -25,22 +41,44 @@
     --bg-surface: #FFFFFF;
     --bg-raised: #F5F4F2;
     --bg-sunken: #EFEDE9;
+    
     --border-subtle: rgba(0,0,0,0.06);
     --border-default: rgba(0,0,0,0.10);
     --border-strong: rgba(0,0,0,0.18);
+    
     --text-primary: #1A1916;
     --text-secondary: #6B6760;
     --text-tertiary: #A09D98;
+    
     --accent: #1F6FEB;
-    --accent-hover: #1557C0;
     --accent-subtle: #EEF4FF;
-    --font-sans: 'Inter', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
-  }
-}
+    --accent-dark: #1558CC;
 
-body {
-  background-color: var(--bg-surface);
-  color: var(--text-primary);
-  font-family: var(--font-sans);
+    --green: #16A34A;
+    --green-bg: #F0FDF4;
+    --orange: #D97706;
+    --orange-bg: #FFFBEB;
+    --red: #DC2626;
+    --red-bg: #FEF2F2;
+    --purple: #7C3AED;
+    --purple-bg: #F3EFFE;
+    --teal: #0891B2;
+    --teal-bg: #ECFEFF;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, .font-serif {
+    font-family: var(--font-serif);
+  }
+
+  code, .font-mono {
+    font-family: var(--font-mono);
+  }
 }
