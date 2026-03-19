@@ -47,6 +47,19 @@ import { Modal } from '../components/ui/Modal';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
+import { TaskDetailsSidebar } from '../components/features/tasks/TaskDetailsSidebar';
+import { TaskTemplatesModal } from '../components/features/tasks/TaskTemplatesModal';
+import { WorkloadView } from '../components/features/tasks/WorkloadView';
+import { useNotifications } from '../hooks/use-notifications';
+import { 
+  BarChart3, 
+  Layers, 
+  User as UserIcon, 
+  MapPin, 
+  Flag, 
+  MessageCircle,
+  AlertCircle
+} from 'lucide-react';
 
 // Types for tasks
 type TaskPriority = 'critical' | 'high' | 'medium' | 'low';
@@ -60,16 +73,75 @@ interface Task {
   fileName?: string;
   status: TaskStatus;
   priority: TaskPriority;
+  phase: string;
   dueDate: string;
-  assignee: { name: string; initials: string };
+  assignee: { name: string; initials: string; avatarUrl?: string };
   isOverdue?: boolean;
+  isRecurring?: boolean;
+  description?: string;
+  comments?: Array<{
+    id: string;
+    author: { name: string; initials: string; avatarUrl?: string };
+    content: string;
+    timestamp: string;
+  }>;
 }
 
 const INITIAL_TASKS: Task[] = [
-  { id: '1', title: 'Revise lobby section details', projectId: 'p1', status: 'todo', priority: 'high', dueDate: 'Mar 18', projectName: 'Riverside Tower', fileName: 'S01_Sections.dwg', assignee: { name: 'Julian S', initials: 'JS' } },
-  { id: '2', title: 'Update door schedule signatures', projectId: 'p1', status: 'in_progress', priority: 'critical', dueDate: 'Mar 12', projectName: 'Riverside Tower', isOverdue: true, assignee: { name: 'Ana Kim', initials: 'AK' } },
-  { id: '3', title: 'Prepare client presentation set', projectId: 'p2', status: 'review', priority: 'medium', dueDate: 'Mar 19', projectName: 'Mountain Villa', assignee: { name: 'Julian S', initials: 'JS' } },
-  { id: '4', title: 'Export IFC for structural sync', projectId: 'p1', status: 'todo', priority: 'medium', dueDate: 'Mar 20', projectName: 'Riverside Tower', fileName: 'Master_Model.ifc', assignee: { name: 'Ana Kim', initials: 'AK' } },
+  { 
+    id: '1', 
+    title: 'Revise lobby section details', 
+    projectId: 'p1', 
+    status: 'todo', 
+    priority: 'high', 
+    phase: 'Design Dev',
+    dueDate: 'Mar 18, 2026', 
+    projectName: 'Riverside Tower', 
+    fileName: 'S01_Sections.dwg', 
+    assignee: { name: 'Julian S', initials: 'JS' },
+    description: 'The lobby section needs to be updated with the new structural grid dimensions provided by the engineers.',
+    isRecurring: false,
+    comments: [
+      { id: 'c1', author: { name: 'Ana Kim', initials: 'AK' }, content: 'This is high priority - client presentation is Mar 30.', timestamp: 'Mar 15' }
+    ]
+  },
+  { 
+    id: '2', 
+    title: 'Update door schedule signatures', 
+    projectId: 'p1', 
+    status: 'in_progress', 
+    priority: 'critical', 
+    phase: 'Construction',
+    dueDate: 'Mar 12, 2026', 
+    projectName: 'Riverside Tower', 
+    isOverdue: true, 
+    assignee: { name: 'Ana Kim', initials: 'AK' },
+    description: 'All door schedules must be signed off by the lead architect before submitting to the contractor.',
+    isRecurring: true
+  },
+  { 
+    id: '3', 
+    title: 'Prepare client presentation set', 
+    projectId: 'p2', 
+    status: 'review', 
+    priority: 'medium', 
+    phase: 'Schematic Design',
+    dueDate: 'Mar 19, 2026', 
+    projectName: 'Mountain Villa', 
+    assignee: { name: 'Julian S', initials: 'JS' } 
+  },
+  { 
+    id: '4', 
+    title: 'Export IFC for structural sync', 
+    projectId: 'p1', 
+    status: 'todo', 
+    priority: 'medium', 
+    phase: 'Design Dev',
+    dueDate: 'Mar 20, 2026', 
+    projectName: 'Riverside Tower', 
+    fileName: 'Master_Model.ifc', 
+    assignee: { name: 'Ana Kim', initials: 'AK' } 
+  },
 ];
 
 const COLUMNS: { id: TaskStatus; label: string }[] = [
@@ -86,20 +158,51 @@ const priorityColors: Record<TaskPriority, string> = {
   low: 'bg-[#94A3B8]'
 };
 
+const TEMPLATE_TASKS: Record<string, Partial<Task>[]> = {
+  'schematic': [
+    { title: 'Project Kickoff Meeting', phase: 'Schematic Design', priority: 'high', status: 'done' },
+    { title: 'Site Analysis & Survey Review', phase: 'Schematic Design', priority: 'medium', status: 'done' },
+    { title: 'Conceptual Design Sketches', phase: 'Schematic Design', priority: 'high', status: 'in_progress' },
+    { title: 'Budget Allocation Study', phase: 'Schematic Design', priority: 'medium', status: 'todo' },
+    { title: 'Client Sign-off on Concept', phase: 'Schematic Design', priority: 'critical', status: 'todo' },
+  ],
+  'design-dev': [
+    { title: 'Mechanical/Electrical Coordination', phase: 'Design Dev', priority: 'high', status: 'todo' },
+    { title: 'Material Selection & Specifications', phase: 'Design Dev', priority: 'medium', status: 'todo' },
+    { title: 'Life Safety Review', phase: 'Design Dev', priority: 'critical', status: 'todo' },
+    { title: 'Elevations & Sections Drafting', phase: 'Design Dev', priority: 'high', status: 'todo' },
+  ],
+  'construction': [
+    { title: 'Permit Application Prep', phase: 'Construction', priority: 'critical', status: 'todo' },
+    { title: 'Detail Drawings Set', phase: 'Construction', priority: 'high', status: 'todo' },
+    { title: 'Structural Engineer Sign-off', phase: 'Construction', priority: 'critical', status: 'todo' },
+  ],
+  'closeout': [
+    { title: 'As-Built Drawings Finalization', phase: 'Closeout', priority: 'medium', status: 'todo' },
+    { title: 'Punch List Inspection', phase: 'Closeout', priority: 'high', status: 'todo' },
+    { title: 'Warranty Documentation', phase: 'Closeout', priority: 'low', status: 'todo' },
+  ]
+};
+
 export default function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialProjectId = searchParams.get('project') || 'all';
 
   const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [view, setView] = useState<'kanban' | 'list'>('kanban');
+  const [view, setView] = useState<'kanban' | 'list' | 'workload'>('kanban');
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [targetStatus, setTargetStatus] = useState<TaskStatus>('todo');
+  const [activeFilter, setActiveFilter] = useState<string>('all');
   const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId);
   const { data: projects } = useProjects();
   
   const { user } = useAuth();
   const { data: members } = useProjectMembers(selectedProjectId !== 'all' ? selectedProjectId : '');
+  const addNotification = useNotifications(state => state.addNotification);
   const currentUserRole = members?.find(m => m.user_id === user?.id)?.role;
   const isReadOnly = selectedProjectId !== 'all' && (currentUserRole === 'viewer' || currentUserRole === 'client');
 
@@ -113,9 +216,21 @@ export default function TasksPage() {
     setSearchParams(searchParams);
   };
 
-  const filteredTasks = selectedProjectId === 'all' 
-    ? tasks 
-    : tasks.filter(t => t.projectId === selectedProjectId);
+  const filteredTasks = tasks.filter(t => {
+    const projectMatch = selectedProjectId === 'all' || t.projectId === selectedProjectId;
+    if (!projectMatch) return false;
+
+    if (activeFilter === 'overdue') return t.isOverdue;
+    if (activeFilter === 'my_tasks') return t.assignee.name === 'Ana Kim'; // Mock current user
+    if (activeFilter === 'high_priority') return t.priority === 'high' || t.priority === 'critical';
+    if (activeFilter === 'in_review') return t.status === 'review';
+    
+    // Phase filters (logic for specific phase chips)
+    if (activeFilter === 'phase_schematic') return t.phase === 'Schematic Design';
+    if (activeFilter === 'phase_dd') return t.phase === 'Design Dev' || t.phase === 'Design Development';
+    
+    return true;
+  });
 
   const handleAddTask = (status: TaskStatus = 'todo') => {
     setTargetStatus(status);
@@ -131,11 +246,60 @@ export default function TasksPage() {
       projectName: defaultProject ? defaultProject.name : 'Unknown Project',
       status: targetStatus,
       priority: newTask.priority,
-      dueDate: 'Mar 25', // Default due date
+      phase: 'Design Dev', // Default phase
+      dueDate: 'Mar 25, 2026', // Default due date
       assignee: { name: 'Ana Kim', initials: 'AK' } // Default assignee
     };
     setTasks(prev => [...prev, task]);
+    
+    // Notification for task creation (mocking assignment notice)
+    addNotification({
+      type: 'task',
+      author: 'System',
+      title: 'Global Task Created',
+      subtitle: `New task "${newTask.title}" added to project.`,
+      projectId: newTask.projectId
+    });
+
     setIsModalOpen(false);
+  };
+
+  const handleTaskClick = (task: Task) => {
+    setSelectedTask(task);
+    setIsSidebarOpen(true);
+  };
+
+  const handleUpdateTask = (updatedTask: Task) => {
+    setTasks(prev => prev.map(t => t.id === updatedTask.id ? updatedTask : t));
+    if (selectedTask?.id === updatedTask.id) {
+      setSelectedTask(updatedTask);
+    }
+  };
+
+  const handleApplyTemplate = (templateId: string) => {
+    const templateData = TEMPLATE_TASKS[templateId];
+    if (!templateData) return;
+
+    const projectId = selectedProjectId === 'all' ? (projects?.[0]?.id || '1') : selectedProjectId;
+    
+    const newTasks: Task[] = templateData.map((t, index) => ({
+      id: `template-${templateId}-${Date.now()}-${index}`,
+      title: t.title || 'Untitled Task',
+      status: (t.status as TaskStatus) || 'todo',
+      priority: (t.priority as TaskPriority) || 'medium',
+      projectId: projectId,
+      projectName: projects?.find(p => p.id === projectId)?.name || 'Project',
+      phase: t.phase || 'General',
+      assignee: { name: 'Ana Kim', initials: 'AK' }, // Default to current user
+      dueDate: new Date(Date.now() + 86400000 * 7).toISOString(), // 1 week out
+      isOverdue: false,
+      isRecurring: false,
+      description: `Task added from ${templateId} template.`,
+      comments: []
+    }));
+
+    setTasks(prev => [...prev, ...newTasks]);
+    setIsTemplatesModalOpen(false);
   };
 
   const sensors = useSensors(
@@ -279,44 +443,145 @@ export default function TasksPage() {
         </div>
       </div>
 
-      {/* Kanban Content */}
-      <div className="flex-1 min-h-0">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 h-full min-h-[400px]">
-            {COLUMNS.map((col) => (
-              <DroppableColumn 
-                key={col.id} 
-                column={col} 
-                tasks={filteredTasks} 
-                onAddTask={handleAddTask}
-                isReadOnly={isReadOnly}
-              >
-                <div className="flex-1 overflow-y-auto space-y-3 pr-1 py-1 custom-scrollbar min-h-[150px]">
-                  <SortableContext
-                    id={col.id}
-                    items={filteredTasks.filter(t => t.status === col.id).map(t => t.id)}
-                    strategy={verticalListSortingStrategy}
-                  >
-                    {filteredTasks.filter(t => t.status === col.id).map((task) => (
-                      <SortableTask key={task.id} task={task} />
-                    ))}
-                  </SortableContext>
-                </div>
-              </DroppableColumn>
-            ))}
-          </div>
-
-          <DragOverlay>
-            {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
-          </DragOverlay>
-        </DndContext>
+      {/* Filter Chips Bar */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar shrink-0">
+        <span className="text-[12px] font-medium text-[var(--text-tertiary)] mr-2 shrink-0">Filter:</span>
+        {[
+          { id: 'all', label: 'All' },
+          { id: 'overdue', label: 'Overdue', icon: AlertCircle, color: 'text-rose-500' },
+          { id: 'my_tasks', label: 'My tasks' },
+          { id: 'high_priority', label: 'High priority' },
+          { id: 'in_review', label: 'In Review' },
+          { id: 'phase_schematic', label: 'Phase: Schematic' },
+          { id: 'phase_dd', label: 'Phase: Design Dev' },
+        ].map((filter) => (
+          <button
+            key={filter.id}
+            onClick={() => setActiveFilter(filter.id)}
+            className={cn(
+              "px-4 py-1.5 rounded-lg border text-[13px] font-medium transition-all flex items-center gap-2 shrink-0 h-9",
+              activeFilter === filter.id 
+                ? "bg-blue-50 border-blue-500 text-blue-600 shadow-sm" 
+                : "bg-white border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent)]"
+            )}
+          >
+            {filter.icon && <filter.icon className={cn("w-3.5 h-3.5", filter.color)} />}
+            {filter.label}
+          </button>
+        ))}
       </div>
+
+      {/* View Switcher Bar */}
+      <div className="flex items-center justify-between shrink-0 bg-white/50 backdrop-blur-sm p-1 rounded-xl border border-[var(--border-subtle)]">
+        <div className="flex items-center gap-1">
+          <button 
+            onClick={() => setView('kanban')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-[13px] font-bold",
+              view === 'kanban' ? "bg-white shadow-sm text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            )}
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            Kanban
+          </button>
+          <button 
+            onClick={() => setView('list')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-[13px] font-bold",
+              view === 'list' ? "bg-white shadow-sm text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            )}
+          >
+            <ListIcon className="w-4 h-4" />
+            List
+          </button>
+          <button 
+            onClick={() => setView('workload')}
+            className={cn(
+              "flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-[13px] font-bold",
+              view === 'workload' ? "bg-white shadow-sm text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+            )}
+          >
+            <BarChart3 className="w-4 h-4" />
+            Workload
+          </button>
+        </div>
+
+        <button 
+          onClick={() => setIsTemplatesModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-subtle)] text-[13px] font-bold text-[var(--text-primary)] hover:border-[var(--accent)] transition-all shadow-sm group"
+        >
+          <div className="w-6 h-6 rounded flex items-center justify-center bg-white border border-[var(--border-subtle)] group-hover:scale-110 transition-transform">
+            <span role="img" aria-label="template" className="text-[12px]">📋</span>
+          </div>
+          Templates
+        </button>
+      </div>
+
+      {/* Kanban Content */}
+      {view === 'kanban' && (
+        <div className="flex-1 min-h-0">
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCorners}
+            onDragStart={handleDragStart}
+            onDragOver={handleDragOver}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex flex-col md:flex-row gap-6 h-full min-h-[400px] md:overflow-x-auto pb-4 custom-scrollbar">
+              {COLUMNS.map((col) => (
+                <div key={col.id} className="flex-1 min-w-full md:min-w-[300px] flex flex-col h-auto md:h-full">
+                  <DroppableColumn 
+                    column={col} 
+                    tasks={filteredTasks} 
+                    onAddTask={handleAddTask}
+                    isReadOnly={isReadOnly}
+                  >
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-1 py-1 custom-scrollbar min-h-[200px] max-h-[500px] md:max-h-none">
+                      <SortableContext
+                        id={col.id}
+                        items={filteredTasks.filter(t => t.status === col.id).map(t => t.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {filteredTasks.filter(t => t.status === col.id).map((task) => (
+                          <SortableTask 
+                            key={task.id} 
+                            task={task} 
+                            onClick={() => handleTaskClick(task)} 
+                            onUpdateTask={handleUpdateTask}
+                          />
+                        ))}
+                      </SortableContext>
+                    </div>
+                  </DroppableColumn>
+                </div>
+              ))}
+            </div>
+
+            <DragOverlay>
+              {activeTask ? <TaskCard task={activeTask} isDragging /> : null}
+            </DragOverlay>
+          </DndContext>
+        </div>
+      )}
+
+      {/* Workload View */}
+      {view === 'workload' && (
+        <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+          <WorkloadView 
+            tasks={tasks} 
+            members={members || []} 
+            projectName={projects?.find(p => p.id === selectedProjectId)?.name || 'All Projects'} 
+          />
+        </div>
+      )}
+
+      {/* List View placeholder */}
+      {view === 'list' && (
+        <div className="flex-1 min-h-0 py-12 text-center border-2 border-dashed border-[var(--border-subtle)] rounded-2xl bg-white/50 backdrop-blur-sm">
+           <ListIcon className="w-12 h-12 text-[var(--text-tertiary)] mx-auto mb-4 opacity-20" />
+           <p className="text-[var(--text-tertiary)] font-serif italic text-lg">List view is coming soon...</p>
+        </div>
+      )}
 
       <NewTaskModal 
         open={isModalOpen} 
@@ -326,10 +591,24 @@ export default function TasksPage() {
         projects={projects || []}
         defaultProjectId={selectedProjectId === 'all' ? (projects?.[0]?.id || '') : selectedProjectId}
       />
+
+      <TaskDetailsSidebar 
+        task={selectedTask}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onUpdateTask={handleUpdateTask}
+        members={members || []}
+      />
+
+      <TaskTemplatesModal 
+        open={isTemplatesModalOpen}
+        onOpenChange={setIsTemplatesModalOpen}
+        onSelectTemplate={handleApplyTemplate}
+      />
     </div>  );
 }
 
-function SortableTask({ task }: { task: Task }) {
+function SortableTask({ task, onClick, onUpdateTask }: { task: Task; onClick: () => void; onUpdateTask: (task: Task) => void }) {
   const {
     attributes,
     listeners,
@@ -339,29 +618,61 @@ function SortableTask({ task }: { task: Task }) {
     isDragging
   } = useSortable({ id: task.id });
 
+  const addNotification = useNotifications(state => state.addNotification);
+
   const style = {
     transform: CSS.Translate.toString(transform),
     transition,
     opacity: isDragging ? 0.4 : 1
   };
 
+  const handleToggleStatus = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newStatus = task.status === 'done' ? 'todo' : 'done';
+    onUpdateTask({ ...task, status: newStatus as TaskStatus });
+    
+    if (newStatus === 'done') {
+      addNotification({
+        type: 'task',
+        author: 'System',
+        title: 'Task Completed',
+        subtitle: `"${task.title}" has been marked as complete.`,
+        projectId: task.projectId
+      });
+    }
+  };
+
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <TaskCard task={task} />
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={onClick}>
+      <TaskCard task={task} onToggleStatus={handleToggleStatus} />
     </div>
   );
 }
 
-function TaskCard({ task, isDragging }: { task: Task; isDragging?: boolean }) {
+function TaskCard({ task, isDragging, onToggleStatus }: { task: Task; isDragging?: boolean; onToggleStatus?: (e: React.MouseEvent) => void }) {
   return (
     <div className={cn(
       "group bg-white border border-[var(--border-default)] rounded-[20px] p-5 shadow-sm hover:border-[var(--accent)] transition-all cursor-grab active:grabbing relative overflow-hidden",
       isDragging && "scale-[1.02] shadow-2xl border-[var(--accent)] rotate-[1deg]",
-      task.status === 'in_progress' && "border-r-2 border-r-[var(--accent)]",
-      task.status === 'done' && "opacity-60"
+      task.status === 'done' && "bg-[var(--bg-raised)]/30 border-[var(--border-subtle)]"
     )}>
+      {/* Interaction Layer: Status Toggle */}
+      <div className="absolute top-4 right-4 z-20">
+        <button 
+          onClick={onToggleStatus}
+          className={cn(
+            "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
+            task.status === 'done' 
+              ? "bg-emerald-500 border-emerald-500 text-white" 
+              : "border-[var(--border-default)] hover:border-emerald-500 hover:bg-emerald-50/50 bg-white"
+          )}
+        >
+          {task.status === 'done' && <CheckCircle2 className="w-3.5 h-3.5" />}
+        </button>
+      </div>
+
       {/* Subtle Background Icon */}
-      <div className="absolute -right-2 -bottom-2 w-12 h-12 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-500">
+      <div className="absolute -right-2 -bottom-2 w-12 h-12 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity duration-500 pointer-events-none">
          <CheckCircle2 className="w-full h-full" />
       </div>
 
@@ -381,7 +692,10 @@ function TaskCard({ task, isDragging }: { task: Task; isDragging?: boolean }) {
           {task.projectName}
         </div>
       )}
-      <h4 className="font-serif text-[15px] italic text-[var(--text-primary)] group-hover:text-[var(--accent)] leading-tight mb-5 transition-colors">
+      <h4 className={cn(
+        "font-serif text-[15px] italic text-[var(--text-primary)] group-hover:text-[var(--accent)] leading-tight mb-5 transition-all pr-8",
+        task.status === 'done' && "line-through opacity-40"
+      )}>
         {task.title}
       </h4>
       <div className="flex items-center justify-between gap-3 pt-4 border-t border-[var(--border-subtle)]">

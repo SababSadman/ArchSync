@@ -29,7 +29,10 @@ export function Modal({
 }: ModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={cn("sm:max-w-[480px] bg-[var(--bg-surface)] border-[var(--border-subtle)] p-0 gap-0 overflow-hidden rounded-2xl", className)}>
+      <DialogContent 
+        onClose={() => onOpenChange(false)}
+        className={cn("sm:max-w-[480px] bg-[var(--bg-surface)] border-[var(--border-subtle)] p-0 gap-0 overflow-hidden rounded-2xl", className)}
+      >
         <DialogHeader className="p-6 pb-4">
           <DialogTitle className="font-serif text-2xl text-[var(--text-primary)] italic">
             {title}

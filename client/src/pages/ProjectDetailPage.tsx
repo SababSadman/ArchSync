@@ -8,11 +8,14 @@ import {
   Users
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { ProjectTasksModal } from '../components/projects/ProjectTasksModal';
+import { useState } from 'react';
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
   const { data: projects } = useProjects();
   const project = projects?.find(p => p.id === id);
+  const [isTasksModalOpen, setIsTasksModalOpen] = useState(false);
 
   if (!project) return null;
 
@@ -31,30 +34,47 @@ export default function ProjectDetailPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
           { label: 'Files', icon: Files, link: 'files', count: '12', color: 'text-blue-600', bg: 'bg-blue-50' },
-          { label: 'Tasks', icon: CheckSquare, link: '/tasks', count: '4', color: 'text-orange-600', bg: 'bg-orange-50' },
+          { label: 'Tasks', icon: CheckSquare, link: '#', count: '4', color: 'text-orange-600', bg: 'bg-orange-50', isModal: true },
           { label: 'Comments', icon: MessageSquare, link: 'files', count: '28', color: 'text-emerald-600', bg: 'bg-emerald-50' },
           { label: 'Team', icon: Users, link: 'team', count: '3', color: 'text-purple-600', bg: 'bg-purple-50' }
         ].map((c) => (
-          <Link 
+          <div 
             key={c.label} 
-            to={c.link.startsWith('/') ? c.link : `/projects/${id}/${c.link}`}
-            className="group bg-white border border-[var(--border-subtle)] p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-black/5 transition-all duration-300 relative overflow-hidden"
+            onClick={() => {
+              if (c.label === 'Tasks') {
+                setIsTasksModalOpen(true);
+              }
+            }}
+            className="cursor-pointer"
           >
-            <div className={cn("absolute -right-2 -top-2 w-16 h-16 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500", c.color)}>
-              <c.icon className="w-full h-full rotate-12" />
-            </div>
-            
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500", c.bg)}>
-              <c.icon className={cn("w-5 h-5", c.color)} />
-            </div>
-            
-            <div className="flex items-end justify-between relative z-10">
-              <span className="text-[14px] font-bold text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--accent)] transition-colors">{c.label}</span>
-              <span className="font-serif text-[24px] italic text-[var(--text-primary)] leading-none">{c.count}</span>
-            </div>
-          </Link>
+            <Link 
+              to={c.isModal ? '#' : (c.link.startsWith('/') ? c.link : `/projects/${id}/${c.link}`)}
+              onClick={(e) => { if (c.isModal) e.preventDefault(); }}
+              className="group h-full bg-white border border-[var(--border-subtle)] p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-black/5 transition-all duration-300 relative overflow-hidden flex flex-col"
+            >
+              <div className={cn("absolute -right-2 -top-2 w-16 h-16 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500", c.color)}>
+                <c.icon className="w-full h-full rotate-12" />
+              </div>
+              
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500", c.bg)}>
+                <c.icon className={cn("w-5 h-5", c.color)} />
+              </div>
+              
+              <div className="flex items-end justify-between relative z-10 mt-auto">
+                <span className="text-[14px] font-bold text-[var(--text-primary)] uppercase tracking-tight group-hover:text-[var(--accent)] transition-colors">{c.label}</span>
+                <span className="font-serif text-[24px] italic text-[var(--text-primary)] leading-none">{c.count}</span>
+              </div>
+            </Link>
+          </div>
         ))}
       </div>
+
+      <ProjectTasksModal 
+        open={isTasksModalOpen}
+        onOpenChange={setIsTasksModalOpen}
+        projectId={id || ''}
+        projectName={project.name}
+      />
 
       <div className="bg-white border border-[var(--border-subtle)] p-12 rounded-[24px] flex flex-col items-center justify-center text-center">
          <div className="w-20 h-20 rounded-full bg-[var(--bg-raised)] flex items-center justify-center mb-6">

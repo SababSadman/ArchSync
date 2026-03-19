@@ -12,8 +12,8 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden bg-[var(--bg-base)]">
         <TopBar />
         
-        <main className="flex-1 overflow-y-auto px-8 py-7">
-          <div className="mx-auto max-w-[1600px] h-full">
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-[1600px] h-full px-8 py-7">
             <Outlet />
           </div>
         </main>

@@ -53,6 +53,7 @@ interface NotificationStore {
   togglePin: (id: string) => void;
   toggleInAppPref: (key: keyof NotificationPreferences['inApp']) => void;
   toggleEmailPref: (key: keyof NotificationPreferences['email']) => void;
+  addNotification: (notification: Omit<AppNotification, 'id' | 'time' | 'isUnread'>) => void;
 }
 
 export const useNotifications = create<NotificationStore>()(
@@ -83,7 +84,22 @@ export const useNotifications = create<NotificationStore>()(
           ...state.preferences,
           email: { ...state.preferences.email, [key]: !state.preferences.email[key] }
         }
-      }))
+      })),
+      addNotification: (notification) => set((state) => {
+        // Check preferences
+        if (notification.type === 'task' && !state.preferences.inApp.taskAssigned) return state;
+        if (notification.type === 'mention' && !state.preferences.inApp.mentions) return state;
+
+        const newNotification: AppNotification = {
+          ...notification,
+          id: Math.random().toString(36).substr(2, 9),
+          time: 'Just now',
+          isUnread: true,
+        };
+        return {
+          notifications: [newNotification, ...state.notifications]
+        };
+      })
     }),
     {
       name: 'archsync-notifications-store',
