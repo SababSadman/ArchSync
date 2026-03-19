@@ -1,5 +1,5 @@
 # ArchSync
-
+Author-Sabab Sadman
 **Architecture studio collaboration platform** — file management, version control, spatially-pinned comments, kanban tasks, client approvals, and real-time team presence. Built for architects who have high visual standards and need a tool that actually fits their workflow.
 
 > Vite + React · Node.js + Express · Supabase · Three.js · TypeScript
