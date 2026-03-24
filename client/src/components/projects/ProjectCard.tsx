@@ -18,10 +18,10 @@ interface ProjectCardProps {
 }
 
 const statusColors: Record<string, string> = {
-  draft: 'bg-gray-400',
-  active: 'bg-emerald-500',
-  on_hold: 'bg-amber-500',
-  completed: 'bg-blue-500',
+  draft: 'bg-[var(--text-tertiary)]',
+  active: 'bg-[var(--green)]',
+  on_hold: 'bg-[var(--orange)]',
+  completed: 'bg-[var(--accent)]',
 };
 
 const phaseLabel: Record<string, string> = {
@@ -32,10 +32,10 @@ const phaseLabel: Record<string, string> = {
 };
 
 const phaseColors: Record<string, string> = {
-  schematic: 'bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300',
-  design_dev: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
-  construction: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300',
-  closeout: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  schematic: 'bg-[var(--purple-bg)] text-[var(--purple)]',
+  design_dev: 'bg-[var(--accent-subtle)] text-[var(--accent)]',
+  construction: 'bg-[var(--orange-bg)] text-[var(--orange)]',
+  closeout: 'bg-[var(--green-bg)] text-[var(--green)]',
 };
 
 export function ProjectCard({ project }: ProjectCardProps) {
@@ -92,9 +92,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
         {/* Status Indicator Dot */}
         <div className="absolute top-3 left-3 flex items-center gap-2 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/10 shadow-lg">
           <div className={`w-2 h-2 rounded-full animate-pulse shadow-[0_0_8px] ${statusColors[project.status]} ${
-            project.status === 'active' ? 'shadow-emerald-500/50' : 
-            project.status === 'on_hold' ? 'shadow-amber-500/50' : 
-            'shadow-gray-500/50'
+            project.status === 'active' ? 'shadow-[var(--green)]/50' : 
+            project.status === 'on_hold' ? 'shadow-[var(--orange)]/50' : 
+            'shadow-[var(--text-tertiary)]/50'
           }`} />
           <span className="text-[10px] font-bold text-white uppercase tracking-wider">
             {project.status.replace('_', ' ')}

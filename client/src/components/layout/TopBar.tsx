@@ -1,8 +1,9 @@
 import React from 'react';
-import { Search, Bell, Menu } from 'lucide-react';
+import { Search, Bell, Menu, Sun, Moon } from 'lucide-react';
 import { useLocation, useParams, Link } from 'react-router-dom';
 import { useProjects } from '../../hooks/use-projects';
 import { useAuth } from '../../hooks/use-auth';
+import { useTheme } from '../../store/use-theme';
 import { cn } from '../../lib/utils';
 
 export function TopBar() {
@@ -10,6 +11,7 @@ export function TopBar() {
   const { id } = useParams();
   const { user } = useAuth();
   const { data: projects } = useProjects();
+  const { theme, setTheme } = useTheme();
 
   const currentProject = projects?.find(p => p.id === id);
   const pathSegments = location.pathname.split('/').filter(Boolean);
@@ -59,6 +61,15 @@ export function TopBar() {
         <button className="relative w-8 h-8 flex items-center justify-center border border-[var(--border-default)] rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-all">
           <Bell className="w-3.5 h-3.5" />
           <div className="absolute top-[7px] right-[7px] w-1.5 h-1.5 bg-[#DC2626] rounded-full border border-[var(--bg-surface)]" />
+        </button>
+
+        {/* Theme Toggle */}
+        <button 
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="w-8 h-8 flex items-center justify-center border border-[var(--border-default)] rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-raised)] transition-all"
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {theme === 'dark' ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
         </button>
 
         <div className="w-[1px] h-6 bg-[var(--border-subtle)] mx-1" />

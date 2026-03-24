@@ -93,7 +93,7 @@ export default function SettingsPage() {
 function ProfileTab({ user }: { user: any }) {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-      <section className="bg-white border border-[var(--border-subtle)] p-8 rounded-2xl shadow-sm">
+      <section className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-8 rounded-2xl shadow-sm">
         <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--text-tertiary)] font-black block mb-6">Your Profile</label>
         
         <div className="flex items-center gap-8 mb-10">
@@ -132,7 +132,7 @@ function ProfileTab({ user }: { user: any }) {
 function StudioTab() {
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-       <section className="bg-white border border-[var(--border-subtle)] p-8 rounded-2xl shadow-sm">
+       <section className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-8 rounded-2xl shadow-sm">
         <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--text-tertiary)] font-black block mb-6">Studio Branding</label>
         
         <div className="flex items-center gap-8 mb-10 border-b border-[var(--border-subtle)] pb-10">
@@ -248,7 +248,7 @@ function Input({ label, icon: Icon, trailingIcon: TrailingIcon, ...props }: any)
 
 function PluginCard({ icon, name, version, description, beta }: any) {
   return (
-    <div className="bg-white border border-[var(--border-subtle)] p-6 rounded-2xl shadow-sm hover:border-[var(--border-strong)] transition-all group">
+    <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-6 rounded-2xl shadow-sm hover:border-[var(--border-strong)] transition-all group">
       <div className="flex items-center justify-between mb-4">
         <span className="text-2xl drop-shadow-sm">{icon}</span>
         <div className="flex gap-2">
@@ -280,7 +280,7 @@ function NotificationsTab() {
   
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-      <section className="bg-white border border-[var(--border-subtle)] p-8 rounded-2xl shadow-sm">
+      <section className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-8 rounded-2xl shadow-sm">
         <label className="font-mono text-[9px] uppercase tracking-widest text-[var(--text-tertiary)] font-black block mb-6">Notification Preferences</label>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12">

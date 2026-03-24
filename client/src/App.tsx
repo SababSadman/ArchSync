@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AppLayout } from './components/layout/AppLayout';
 import { Toaster } from 'sonner';
+import { useEffect } from 'react';
+import { useTheme } from './store/use-theme';
 
 // Lazy load pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -28,6 +30,20 @@ function LoadingScreen() {
 }
 
 function App() {
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+
+    if (theme === 'system') {
+      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      root.classList.add(systemTheme);
+    } else {
+      root.classList.add(theme);
+    }
+  }, [theme]);
+
   return (
     <BrowserRouter>
       <Suspense fallback={<LoadingScreen />}>

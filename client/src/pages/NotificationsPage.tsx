@@ -21,11 +21,11 @@ import { useNotifications, NotificationType, AppNotification } from '../hooks/us
 import { toast } from 'sonner';
 
 const typeStyles: Record<NotificationType, { icon: any; color: string; label: string; emoji: string }> = {
-  mention: { icon: AtSign, color: 'bg-orange-50 text-orange-600', label: 'Mention', emoji: '📍' },
-  approval: { icon: FileCheck, color: 'bg-emerald-50 text-emerald-600', label: 'Approval', emoji: '✅' },
-  file_upload: { icon: FileUp, color: 'bg-blue-50 text-blue-600', label: 'Upload', emoji: '📤' },
-  task: { icon: CheckSquare, color: 'bg-purple-50 text-purple-600', label: 'Task', emoji: '✅' },
-  team: { icon: Bell, color: 'bg-slate-50 text-slate-600', label: 'Team', emoji: '👥' }
+  mention: { icon: AtSign, color: 'bg-[var(--orange-bg)] text-[var(--orange)]', label: 'Mention', emoji: '📍' },
+  approval: { icon: FileCheck, color: 'bg-[var(--green-bg)] text-[var(--green)]', label: 'Approval', emoji: '✅' },
+  file_upload: { icon: FileUp, color: 'bg-[var(--accent-subtle)] text-[var(--accent)]', label: 'Upload', emoji: '📤' },
+  task: { icon: CheckSquare, color: 'bg-[var(--purple-bg)] text-[var(--purple)]', label: 'Task', emoji: '✅' },
+  team: { icon: Bell, color: 'bg-[var(--bg-raised)] text-[var(--text-secondary)]', label: 'Team', emoji: '👥' }
 };
 
 export default function NotificationsPage() {
@@ -113,7 +113,7 @@ export default function NotificationsPage() {
         </div>
 
         {/* List Content */}
-        <div className="bg-white border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
           {pinnedNotifications.length > 0 && (
             <>
               <div className="font-mono text-[9px] uppercase tracking-[0.2em] text-[var(--accent)] bg-[var(--accent-subtle)]/30 px-6 py-3 font-black border-b border-[var(--border-subtle)] flex items-center gap-2">
@@ -131,7 +131,7 @@ export default function NotificationsPage() {
             Today
           </div>
           <div className="divide-y divide-[var(--border-subtle)]">
-            {unpinnedNotifications.filter(n => n.time.includes('m ago') || n.time.includes('h ago')).map((n) => (
+            {unpinnedNotifications.filter(n => n.time.includes('m ago') || n.time.includes('h ago') || n.time === 'Just now').map((n) => (
               <NotificationRow key={n.id} notification={n} />
             ))}
           </div>
@@ -152,7 +152,7 @@ export default function NotificationsPage() {
         "lg:w-[320px] lg:flex flex-col shrink-0 gap-6",
         prefOpen ? "flex" : "hidden"
       )}>
-        <div className="bg-white border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm sticky top-[76px]">
+        <div className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl p-6 shadow-sm sticky top-[76px]">
           <h2 className="font-serif text-[20px] italic text-[var(--text-primary)] mb-6">Preferences</h2>
           
           <div className="space-y-8">
@@ -263,7 +263,7 @@ function NotificationRow({ notification: n }: { notification: AppNotification })
           
           <button 
             onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); toast.success('Notification deleted'); }}
-            className="p-1.5 text-[var(--text-tertiary)] hover:text-red-600 hover:bg-red-50 rounded-md border border-transparent hover:border-red-100 transition-all"
+            className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--red)] hover:bg-[var(--red-bg)] rounded-md border border-transparent hover:border-[var(--red)]/10 transition-all"
             title="Delete Notification"
           >
             <Trash2 className="w-3.5 h-3.5" />

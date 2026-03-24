@@ -399,7 +399,7 @@ export default function TasksPage() {
               onClick={() => setView('kanban')}
               className={cn(
                 "w-9 h-9 flex items-center justify-center rounded-full transition-all",
-                view === 'kanban' ? "bg-white shadow-sm text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+                view === 'kanban' ? "bg-[var(--bg-surface)] shadow-sm text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
               )}
             >
               <LayoutDashboard className="w-4 h-4" />
@@ -408,7 +408,7 @@ export default function TasksPage() {
               onClick={() => setView('list')}
               className={cn(
                 "w-9 h-9 flex items-center justify-center rounded-full transition-all",
-                view === 'list' ? "bg-white shadow-sm text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
+                view === 'list' ? "bg-[var(--bg-surface)] shadow-sm text-[var(--accent)]" : "text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]"
               )}
             >
               <ListIcon className="w-4 h-4" />
@@ -461,8 +461,8 @@ export default function TasksPage() {
             className={cn(
               "px-4 py-1.5 rounded-lg border text-[13px] font-medium transition-all flex items-center gap-2 shrink-0 h-9",
               activeFilter === filter.id 
-                ? "bg-blue-50 border-blue-500 text-blue-600 shadow-sm" 
-                : "bg-white border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent)]"
+                ? "bg-[var(--accent-subtle)] border-[var(--accent)] text-[var(--accent)] shadow-sm" 
+                : "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-secondary)] hover:border-[var(--accent)]"
             )}
           >
             {filter.icon && <filter.icon className={cn("w-3.5 h-3.5", filter.color)} />}
@@ -510,7 +510,7 @@ export default function TasksPage() {
           onClick={() => setIsTemplatesModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-subtle)] text-[13px] font-bold text-[var(--text-primary)] hover:border-[var(--accent)] transition-all shadow-sm group"
         >
-          <div className="w-6 h-6 rounded flex items-center justify-center bg-white border border-[var(--border-subtle)] group-hover:scale-110 transition-transform">
+          <div className="w-6 h-6 rounded flex items-center justify-center bg-[var(--bg-surface)] border border-[var(--border-subtle)] group-hover:scale-110 transition-transform">
             <span role="img" aria-label="template" className="text-[12px]">📋</span>
           </div>
           Templates
@@ -652,7 +652,7 @@ function SortableTask({ task, onClick, onUpdateTask }: { task: Task; onClick: ()
 function TaskCard({ task, isDragging, onToggleStatus }: { task: Task; isDragging?: boolean; onToggleStatus?: (e: React.MouseEvent) => void }) {
   return (
     <div className={cn(
-      "group bg-white border border-[var(--border-default)] rounded-[20px] p-5 shadow-sm hover:border-[var(--accent)] transition-all cursor-grab active:grabbing relative overflow-hidden",
+      "group bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[20px] p-5 shadow-sm hover:border-[var(--accent)] transition-all cursor-grab active:grabbing relative overflow-hidden",
       isDragging && "scale-[1.02] shadow-2xl border-[var(--accent)] rotate-[1deg]",
       task.status === 'done' && "bg-[var(--bg-raised)]/30 border-[var(--border-subtle)]"
     )}>
@@ -663,8 +663,8 @@ function TaskCard({ task, isDragging, onToggleStatus }: { task: Task; isDragging
           className={cn(
             "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all active:scale-90",
             task.status === 'done' 
-              ? "bg-emerald-500 border-emerald-500 text-white" 
-              : "border-[var(--border-default)] hover:border-emerald-500 hover:bg-emerald-50/50 bg-white"
+              ? "bg-[var(--green)] border-[var(--green)] text-white" 
+              : "border-[var(--border-default)] hover:border-[var(--green)] hover:bg-[var(--green-bg)]/50 bg-[var(--bg-surface)]"
           )}
         >
           {task.status === 'done' && <CheckCircle2 className="w-3.5 h-3.5" />}

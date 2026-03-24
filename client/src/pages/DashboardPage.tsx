@@ -59,12 +59,12 @@ export default function DashboardPage() {
       {/* Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Active Projects', value: projects?.length || 0, icon: Briefcase, color: 'text-blue-600', bg: 'bg-blue-50', trend: '+1 this month' },
-          { label: 'Files This Week', value: 23, icon: Layers, color: 'text-emerald-600', bg: 'bg-emerald-50', trend: '+12% vs last week' },
-          { label: 'Open Tasks', value: 7, icon: Activity, color: 'text-orange-600', bg: 'bg-orange-50', trend: '3 due tomorrow' },
-          { label: 'Pending Approvals', value: 2, icon: CheckCircle, color: 'text-purple-600', bg: 'bg-purple-50', trend: 'Response req' }
+          { label: 'Active Projects', value: projects?.length || 0, icon: Briefcase, color: 'text-[var(--accent)]', bg: 'bg-[var(--accent-subtle)]', trend: '+1 this month' },
+          { label: 'Files This Week', value: 23, icon: Layers, color: 'text-[var(--green)]', bg: 'bg-[var(--green-bg)]', trend: '+12% vs last week' },
+          { label: 'Open Tasks', value: 7, icon: Activity, color: 'text-[var(--orange)]', bg: 'bg-[var(--orange-bg)]', trend: '3 due tomorrow' },
+          { label: 'Pending Approvals', value: 2, icon: CheckCircle, color: 'text-[var(--purple)]', bg: 'bg-[var(--purple-bg)]', trend: 'Response req' }
         ].map((s) => (
-          <div key={s.label} className="group bg-white border border-[var(--border-subtle)] p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-black/5 transition-all duration-500 relative overflow-hidden">
+          <div key={s.label} className="group bg-[var(--bg-surface)] border border-[var(--border-subtle)] p-6 rounded-[24px] shadow-sm hover:shadow-xl hover:shadow-black/5 transition-all duration-500 relative overflow-hidden">
             {/* Background Decoration */}
             <div className={cn("absolute -right-4 -top-4 w-24 h-24 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-700", s.color)}>
               <s.icon className="w-full h-full rotate-12" />
@@ -74,7 +74,7 @@ export default function DashboardPage() {
               <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-5 group-hover:scale-110 transition-transform duration-500", s.bg)}>
                 <s.icon className={cn("w-5 h-5", s.color)} />
               </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-[var(--green)] bg-[var(--green-bg)] px-2 py-1 rounded-full opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                 <ArrowUpRight className="w-3 h-3" />
                 {s.trend.split(' ')[0]}
               </div>
@@ -115,7 +115,7 @@ export default function DashboardPage() {
             <Link 
               key={project.id} 
               to={`/projects/${project.id}`}
-              className="group bg-white border border-[var(--border-default)] rounded-[18px] overflow-hidden hover:border-[var(--border-strong)] transition-all hover:shadow-xl hover:shadow-black/5 flex flex-col h-full"
+              className="group bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-[18px] overflow-hidden hover:border-[var(--border-strong)] transition-all hover:shadow-xl hover:shadow-black/5 flex flex-col h-full"
             >
               <div className={cn("h-20 bg-gradient-to-br w-full relative", gradients[idx % gradients.length])}>
                 <div 
@@ -133,9 +133,9 @@ export default function DashboardPage() {
                 <div className="mt-auto flex items-center justify-between pt-4 border-t border-[var(--border-subtle)]">
                   <span className={cn(
                     "font-mono text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter",
-                    project.phase === 'schematic' ? 'bg-[#F3EFFE] text-[#7C3AED]' : 
-                    project.phase === 'design_dev' ? 'bg-[#EEF4FF] text-[#1F6FEB]' :
-                    'bg-[#FFFBEB] text-[#D97706]'
+                    project.phase === 'schematic' ? 'bg-[var(--purple-bg)] text-[var(--purple)]' : 
+                    project.phase === 'design_dev' ? 'bg-[var(--accent-subtle)] text-[var(--accent)]' :
+                    'bg-[var(--orange-bg)] text-[var(--orange)]'
                   )}>
                     {(project.phase || 'schematic').replace('_', ' ')}
                   </span>
@@ -154,7 +154,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Activity Feed Section */}
-      <section className="bg-white border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
+      <section className="bg-[var(--bg-surface)] border border-[var(--border-subtle)] rounded-2xl overflow-hidden shadow-sm">
         <div className="p-5 border-b border-[var(--border-subtle)]">
           <h2 className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-tertiary)] font-bold">
             Recent Activity
@@ -163,9 +163,9 @@ export default function DashboardPage() {
         <div className="divide-y divide-[var(--border-subtle)]">
           {[
             { icon: Upload, color: 'bg-[var(--accent-subtle)] text-[var(--accent)]', type: 'file_upload', user: 'Ana Kim', target: 'Section Drawings', time: '2m ago' },
-            { icon: MessageSquare, color: 'bg-orange-50 text-orange-600', type: 'comment', user: 'Julian Solo', target: 'Riverside Tower', time: '14h ago' },
-            { icon: CheckCircle, color: 'bg-emerald-50 text-emerald-600', type: 'approval', user: 'Project Lead', target: 'Lobby Design', time: 'Yesterday' },
-            { icon: FileText, color: 'bg-purple-50 text-purple-600', type: 'specification', user: 'Ana Kim', target: 'Door Schedule', time: 'Mar 12' }
+            { icon: MessageSquare, color: 'bg-[var(--orange-bg)] text-[var(--orange)]', type: 'comment', user: 'Julian Solo', target: 'Riverside Tower', time: '14h ago' },
+            { icon: CheckCircle, color: 'bg-[var(--green-bg)] text-[var(--green)]', type: 'approval', user: 'Project Lead', target: 'Lobby Design', time: 'Yesterday' },
+            { icon: FileText, color: 'bg-[var(--purple-bg)] text-[var(--purple)]', type: 'specification', user: 'Ana Kim', target: 'Door Schedule', time: 'Mar 12' }
           ].map((activity, i) => (
             <div key={i} className="flex items-center justify-between p-4 hover:bg-[var(--bg-raised)] transition-colors cursor-pointer group">
               <div className="flex items-center gap-4">
